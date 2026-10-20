@@ -2,7 +2,7 @@
 #
 # This script runs ON the guest (the local side pushes it there):
 #
-#   pwsh -File setup_env.ps1 [-Root <校机>]
+#   pwsh -File setup_env.ps1 -Root <the project folder on the guest>
 #
 # What it looks at:
 #   * the virtual environment (.venv) and its python
@@ -13,7 +13,9 @@
 # Nothing outside the project folder is touched.
 
 param(
-    [string]$Root = "<校机>"
+    # the project folder on the guest: the one that holds tools\ and out\
+    [Parameter(Mandatory = $true)]
+    [string]$Root
 )
 
 $ErrorActionPreference = "Continue"

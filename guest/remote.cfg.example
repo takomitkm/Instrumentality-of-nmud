@@ -1,0 +1,7 @@
+# Copy this to remote.cfg and fill in the two lines for your machine.
+# remote.cfg is local: git ignores it, because the paths differ per machine.
+host=school-guest
+
+# The project folder on the guest (the one that holds tools\ and out\).
+# Leave it empty and the scripts ask for it once, then save it here.
+remote_root=

@@ -1,8 +1,8 @@
 # nmud 语料规律分析报告
 
-对象：`nmud_style/data/nmud.txt`（单篇中文网络帖子，5087 字节）
-分析环境：校机 `<hostname>`（`<username>`），工具链装在 `<校机>`
-所有数字来自 `<校机>\out\nmud_rules.json` 与 `generative_model.json`，可复跑
+对象：语料 `nmud_style/data/nmud.txt`（单篇中文网络帖子，5087 字节，按原始字节保存）
+分析环境：校机 `<hostname>`（`<username>`），工具链装在校机项目根（`tools\`／`out\`／`tmp\`）
+所有数字来自 `checks\nmud_rules.json` 与 `checks\generative_model.json`（拉回本仓库的结果），可复跑
 
 ---
 
@@ -433,7 +433,7 @@ L48  “语气词 该怎么 放”
 
 ### 7.1 工具
 
-校机 `<校机>\tools\nmud_style.py`：
+校机项目根 `tools\` 里的 `nmud_style` 包：
 
 ```
 python nmud_style.py --in 你的中文.txt --out 结果.txt   # 排版成 nmud 语
@@ -449,7 +449,7 @@ python nmud_style.py --report out.json --refit         # 重跑拟合并出完�
 
 **空行分段，段内的换行也是边界**。段与段之间空一行，段内换行会被当成一个空格边界保留下来——上一行末尾和下一行开头不会被粘成一个词（`shake` + `6月26日…` 不会变成 `shake6月26日…`）。
 
-本机还有一个一键脚本：**复制一段中文 → 双击 `nmud-style.bat` → 剪切板里就是排好版的 nmud 语**（`.\`）。它把剪切板推到校机、跑一遍生成器、再把结果写回剪切板。**本机不装任何环境**：解释器、jieba、语料、拟合参数全在校机，本仓库只留源码。
+本机还有一个一键脚本：**复制一段中文 → 双击 `nmud-style.bat` → 剪切板里就是排好版的 nmud 语**（本仓库）。它把剪切板推到校机、跑一遍生成器、再把结果写回剪切板。**本机不装任何环境**：解释器、jieba、语料、拟合参数全在校机，本仓库只留源码。
 
 
 ### 7.2 生成器与作者，同一把尺子
@@ -671,7 +671,7 @@ nmud
 
 ## 附：工具链
 
-校机 `<校机>\.venv`（Python 3.12.15）：
+校机项目根的 `.venv`（Python 3.12.15）：
 
 | 包 | 版本 | 用途 |
 | --- | --- | --- |
@@ -684,7 +684,7 @@ nmud
 | torch | 2.14.1+cpu | HanLP / stanza 依赖 |
 | nltk / numpy / scipy / pandas / matplotlib / pypinyin / cn2an / zhon / opencc / regex | — | 辅助工具 |
 
-分析脚本（校机 `<校机>\tools\`）：
+分析脚本（校机项目根 `tools\`，本仓库 `checks\` 里是同一批）：
 
 | 脚本 | 作用 |
 | --- | --- |
@@ -693,4 +693,4 @@ nmud
 | `nmud_style\engine.py`（包 `nmud_style`） | 五特征生成式模型 + 排版生成器（§5.2、§7），拟合结果缓存在 `nmud_style\data\nmud_style_params.json` |
 | `integrity.py` | 分词器"逐字还原"校验（HanLP 那个 64% 的假象就是它查出来的） |
 
-仓库：`.\`（独立 git 仓库）。`checks\` 下是拉回的结果（`nmud_rules.json`、`generative_model.json`、`nmud_style.json`）与复算脚本；`examples\` 下是生成器示例输出（§7.3、§7.8）：`demo_styled.txt`、`demo2_styled.txt`、`demo3_styled.txt`、`demo4_styled.txt`，对应输入 `demo_plain.txt`、`demo2_plain.txt`、`demo3_plain.txt`、`demo4_voice_plain.txt`；`demo3_keep.txt` 是同一段输入加 `--keep-punct` 的输出。校验脚本 `checks\check_report.py`（102 项）把报告里的每个数字与这些 json 对账，并断言"标点不独立成单元"和"默认输出 == 人工去标点版"。复现步骤见 `SOP-nmud-style.md`。
+仓库：本仓库（独立 git 仓库）。`checks\` 下是拉回的结果（`nmud_rules.json`、`generative_model.json`、`nmud_style.json`）与复算脚本；`examples\` 下是生成器示例输出（§7.3、§7.8）：`demo_styled.txt`、`demo2_styled.txt`、`demo3_styled.txt`、`demo4_styled.txt`，对应输入 `demo_plain.txt`、`demo2_plain.txt`、`demo3_plain.txt`、`demo4_voice_plain.txt`；`demo3_keep.txt` 是同一段输入加 `--keep-punct` 的输出。校验脚本 `checks\check_report.py`（102 项）把报告里的每个数字与这些 json 对账，并断言"标点不独立成单元"和"默认输出 == 人工去标点版"。复现步骤见 `SOP-nmud-style.md`。

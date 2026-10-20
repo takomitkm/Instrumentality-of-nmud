@@ -1,7 +1,8 @@
 # SOP：nmud 语料风格分析与排版生成器
 
 > 一次可复现的完整流程。目标机是**校机**（`<hostname>`，用户 `<username>`），本机只做编辑和取回。
-> 全部产物：`<校机>\`（校机）、`.\`（本机，本仓库）。
+> 全部产物：校机项目根下的 `tools\`（脚本与包）、`out\`（结果）、`tmp\`（暂存），以及本仓库（源码、语料、拟合参数）。
+> 本文里的路径一律是**相对路径**：校机项目根由 `guest\remote.cfg` 的 `remote_root` 决定，仓库内的文件按 `guest\`、`checks\` 这样的目录写。
 > 结论报告见 `nmud_corpus_report.md`；本文只讲**怎么跑起来**。
 >
 > **分工**：本机**不装任何环境**（没有 jieba、没有虚拟环境）。解释器、jieba、语料、拟合参数
@@ -22,7 +23,7 @@
 | --- | --- |
 | SSH 别名 | `school-guest`（`ProxyCommand` 跳板链）、`school-guest-lan`（直连 `<校机的局域网地址>`） |
 | 校机 | `<hostname>`，默认 shell `cmd.exe` |
-| 虚拟环境 | `<校机>\.venv`（Python 3.12.15）——**解释器在校机里，不在本机** |
+| 虚拟环境 | 校机项目根下的 `.venv`（Python 3.12.15）——**解释器在校机里，不在本机** |
 | 关键包 | jieba 0.42.1(+posseg)、thulac、pkuseg、hanlp 2.1.5、torch 2.14.1+cpu、spacy、stanza |
 | 目录布局 | `tools\` 脚本与包／`out\` 结果／`logs\` 日志／`tmp\` 暂存 |
 | 生成器包 | `tools\nmud_style\`（本仓库 `nmud_style\` 同步过去的，含 `data\` 里的语料与拟合参数） |
@@ -77,7 +78,8 @@ python -X utf8 test_nlp_paths.py < /dev/null      # EOF 分支
 
 ```
 host=school-guest
-remote_root=<校机>
+remote_root=<校机上的项目根>      # `guest\remote.cfg` 是本机文件，仓库只带 `guest\remote.cfg.example`；
+                                   # 第一次跑会问一次，问完就写回 remote.cfg
 ```
 
 缺哪行就问哪行，答完写回 `remote.cfg`。`-HostName` 参数优先于配置。
@@ -85,7 +87,7 @@ remote_root=<校机>
 ```
 ### the guest paths
 school machine: ssh alias or host name     [school-guest]
-project folder on the school machine (holds tools\ and out\)  [<校机>]
+project folder on the school machine (holds tools\ and out\)  [<校机上的项目根>]
 ```
 
 改机器只要改这个文件，脚本不用动。
@@ -140,7 +142,7 @@ python -m nmud_style --demo
 ### 3.3.1 一键：剪切板 → nmud 语 → 剪切板
 
 ```
-双击  .\nmud-style.bat
+双击  仓库根目录的 `nmud-style.bat`
 ```
 
 流程：`Get-Clipboard` 取文本 → 推到校机 `tmp\clip_in_<时间戳>.txt` → 校机跑 `python -m nmud_style --in/--out` → 拉回 `tmp\clip_out_<时间戳>.txt` → `Set-Clipboard` 写回。约 10 秒。
@@ -158,7 +160,7 @@ python -m nmud_style --demo
 ### 3.6 把校机装好（环境检测 + 安装）
 
 ```
-双击  .\setup-guest.bat
+双击  仓库根目录的 `setup-guest.bat`
 ```
 
 它做三件事：
@@ -258,11 +260,11 @@ python -X utf8 ".\checks\scan_paths.py"
 
 ## 7. 文件清单
 
-**校机 `<校机>\tools\`**：`nmud.txt`、`nlp_paths.py`、`nmud_rules.py`、`generative_model.py`、`integrity.py`、`style_gen.py`、`demo*_plain.txt`，以及 **`nmud_style\` 包**（`__init__.py`、`__main__.py`、`cli.py`、`engine.py`、`envcheck.py`、`data\nmud.txt`、`data\nmud_style_params.json`）——本仓库 `nmud_style\` 同步过去的。
+**校机项目根的 `tools\`**：`nmud.txt`、`nlp_paths.py`、`nmud_rules.py`、`generative_model.py`、`integrity.py`、`style_gen.py`、`demo*_plain.txt`，以及 **`nmud_style\` 包**（`__init__.py`、`__main__.py`、`cli.py`、`engine.py`、`envcheck.py`、`data\nmud.txt`、`data\nmud_style_params.json`）——本仓库 `nmud_style\` 同步过去的。
 
-**校机 `<校机>\out\`**：`nmud_rules.json`、`generative_model.json`、`nmud_style.json`、`style_gen.json`、`demo*_styled.txt`
+**校机项目根的 `out\`**：`nmud_rules.json`、`generative_model.json`、`nmud_style.json`、`style_gen.json`、`demo*_styled.txt`
 
-**本仓库 `.\`**（独立 git 仓库，不进主库历史）：
+**本仓库**（独立 git 仓库，不进主库历史）：
 
 | 路径 | 说明 |
 | --- | --- |
@@ -279,5 +281,5 @@ python -X utf8 ".\checks\scan_paths.py"
 | `examples/` | 四组示例输入输出 + `demo3_keep.txt`（`--keep-punct` 的输出） |
 | `pyproject.toml` / `requirements.txt` | 打包（`pip install .` 得到 `nmud-style` 命令）与依赖 |
 
-**校机 `<校机>\tmp\`**：只放运行时临时件（`clip_in_*.txt` / `clip_out_*.txt` / `setup_env.ps1` / `_selftest_*.txt`），每次跑完自动删。
+**校机项目根的 `tmp\`**：只放运行时临时件（`clip_in_*.txt` / `clip_out_*.txt` / `setup_env.ps1` / `_selftest_*.txt`），每次跑完自动删。
 

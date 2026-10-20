@@ -6,7 +6,11 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import nmud_style as ns
 
-CACHE = os.environ.get("NLP_CACHE", r"<校机>\out\nmud_style_params.json")
+# the fitted parameters ship with the repository; NLP_CACHE overrides
+HERE = os.path.dirname(os.path.abspath(__file__))
+CACHE = os.environ.get(
+    "NLP_CACHE",
+    os.path.join(HERE, os.pardir, "nmud_style", "data", "nmud_style_params.json"))
 cache = json.load(open(CACHE, encoding="utf-8"))
 params = cache["params"]
 openers = set(cache["openers"])

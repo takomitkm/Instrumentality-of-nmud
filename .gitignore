@@ -9,3 +9,6 @@ __pycache__/
 # scratch
 *.log
 *.tmp
+
+# the local config of the guest (machine specific paths, never committed)
+/guest/remote.cfg

@@ -3,9 +3,9 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nmud-style"
+name = "instrumentality-of-nmud"
 version = "1.0.0"
-description = "Restyle Chinese text into the nmud forum style: short word units, one space between them, two to four units per line."
+description = "nmud language style generator: restyle Chinese text into the nmud forum style - short word units, one space between them, two to four units per line."
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "takomitkm" }]
@@ -40,7 +40,8 @@ analysis = [
 nmud-style = "nmud_style.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/takomitkm/nmud-style"
+Homepage = "https://github.com/takomitkm/Instrumentality-of-nmud"
+Repository = "https://github.com/takomitkm/Instrumentality-of-nmud"
 
 [tool.setuptools]
 packages = ["nmud_style"]

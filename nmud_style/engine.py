@@ -46,10 +46,14 @@ import unicodedata
 from collections import Counter
 from pathlib import Path
 
-import jieba
-import jieba.posseg as pseg
-
-jieba.setLogLevel(60)
+try:
+    import jieba
+    import jieba.posseg as pseg
+except ImportError:  # the environment check has to run without jieba
+    jieba = None
+    pseg = None
+else:
+    jieba.setLogLevel(60)
 
 HERE = Path(__file__).resolve().parent
 # The corpus, the fitted parameters and the result files sit next to this
@@ -260,6 +264,14 @@ def merge_punct(ws, ps):
 
 
 def words_and_pos(stream):
+    if jieba is None:
+        raise SystemExit(
+            "jieba is not installed on this machine.\n"
+            "The generator needs a segmenter. On the school machine it is\n"
+            "already there; on a machine that runs the generator itself:\n"
+            "    python setup_env.py\n"
+            "or check what is missing with:\n"
+            "    nmud-style --check-env")
     ws, ps = [], []
     for w, f in pseg.cut(stream):
         for part in split_mixed_word(w):

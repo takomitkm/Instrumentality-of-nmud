@@ -179,7 +179,7 @@ python -X utf8 ".\setup_env.py" --proxy 127.0.0.1:7897
 
 `setup_env.py` 依次试 PyPI、清华源、阿里源和本机代理；虚拟环境建不起来（沙箱、锁死的 python）就退回当前解释器装。`nmud-style --check-env` 只报告不装。
 
-### 3.4 验收（102 项检查）
+### 3.4 验收（139 项检查）
 
 ```powershell
 python -X utf8 ".\checks\check_report.py"
@@ -190,7 +190,7 @@ python -X utf8 ".\checks\check_report.py"
 - 前 60 项：报告里每个数字都跟 `nmud_rules.json` / `nmud_style.json` 对一遍（**从 JSON 复算，不抄报告**）。**报告里必须写着这个数，而且这个数必须与 JSON 一致**——重拟合之后数字变了而报告没跟上，检查会当场 FAIL。
 - 后 42 项：嗓音层的标点普查、连接词段首数、段尾唯一性、句长统计，四个 demo 输出里"汉字与西文不相邻"和"`90.8%` 不被拆开"，以及标点规则：语料里句号逗号顿号分号冒号括号全为 0、省略号 6、问号 1、感叹号 1、引号 4 对、**没有一个单元只由标点组成**；生成的 demo 里也没有标点自成一格；默认输出与人工去标点版逐字节相同。
 
-期望读数：`PASS 102` / `FAIL 0`。**任何一项 FAIL 都不要发报告**——上次"66 处还是 65 处"的错就是这类问题。
+期望读数：`PASS 139` / `FAIL 0`。**任何一项 FAIL 都不要发报告**——上次"66 处还是 65 处"的错就是这类问题。
 
 ### 3.5 回归：改了脚本之后确认输出没变
 
@@ -277,7 +277,7 @@ python -X utf8 ".\checks\scan_paths.py"
 | `setup-guest.bat` | 把校机装好：同步包 → 校机侧检测与安装 → 自检 |
 | `setup_env.py` / `setup.sh` / `setup.bat` | 给自己跑生成器的设备：检测 + 装进 `.venv` + 自检 |
 | `guest/` | 校机那套 SSH 流程（见 §2） |
-| `checks/` | `check_report.py`（102 项校验，数字全部从 JSON 复算并与报告对账）、分析工具 `nmud_rules.py` / `generative_model.py` / `integrity.py` / `style_gen.py`、复算脚本 `voice_*.py` / `thin_space_*.py`、`nlp_paths.py`、`test_nlp_paths.py`、`scan_paths.py`、`debug_punct.py`，以及分析产出的 json |
+| `checks/` | `check_report.py`（139 项校验，数字全部从 JSON 复算并与报告对账）、分析工具 `nmud_rules.py` / `generative_model.py` / `integrity.py` / `style_gen.py`、复算脚本 `voice_*.py` / `thin_space_*.py`、`nlp_paths.py`、`test_nlp_paths.py`、`scan_paths.py`、`debug_punct.py`，以及分析产出的 json |
 | `examples/` | 四组示例输入输出 + `demo3_keep.txt`（`--keep-punct` 的输出） |
 | `pyproject.toml` / `requirements.txt` | 打包（`pip install .` 得到 `nmud-style` 命令）与依赖 |
 

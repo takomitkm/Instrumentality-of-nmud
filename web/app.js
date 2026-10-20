@@ -44,7 +44,8 @@
           openers: new Set(Array.from(blob.openers)),
           closers: new Set(Array.from(blob.closers)),
           soft: blob.soft,
-          maxUnits: blob.max_units
+          maxUnits: blob.max_units,
+          lb: blob.line_break ? blob.line_break.params : null
         };
       });
   }
@@ -72,7 +73,7 @@
     var t0 = performance.now();
     var styled = window.NmudStyle.styleText(
       text, model.params, model.openers, model.closers,
-      model.soft, model.maxUnits, true);
+      model.soft, model.maxUnits, true, model.lb);
     outBox.value = styled;
     var ms = Math.round(performance.now() - t0);
     say("排好了，用时 " + ms + " 毫秒。");

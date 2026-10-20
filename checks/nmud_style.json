@@ -70,6 +70,217 @@
   "predicted": 513,
   "truth": 500
  },
+ "line_break": {
+  "folds": {
+   "A": {
+    "params": {
+     "target": 20,
+     "hard_max": 20,
+     "w_bal": 0.5,
+     "w_over": 5.0,
+     "min_units": 2,
+     "max_units": 3,
+     "w_short": 8.0,
+     "w_long": 8.0,
+     "w_open": 1.0,
+     "w_close": 1.0
+    },
+    "train": 0.5865,
+    "test": {
+     "precision": 0.55,
+     "recall": 0.4925,
+     "f1": 0.5197,
+     "tp": 33,
+     "predicted": 60,
+     "truth": 67,
+     "paragraphs_exact": 13,
+     "n_paragraphs": 32
+    }
+   },
+   "B": {
+    "params": {
+     "target": 14,
+     "hard_max": 20,
+     "w_bal": 1.0,
+     "w_over": 5.0,
+     "min_units": 3,
+     "max_units": 5,
+     "w_short": 3.0,
+     "w_long": 8.0,
+     "w_open": 0.0,
+     "w_close": 1.0
+    },
+    "train": 0.6338,
+    "test": {
+     "precision": 0.4337,
+     "recall": 0.5294,
+     "f1": 0.4768,
+     "tp": 36,
+     "predicted": 83,
+     "truth": 68,
+     "paragraphs_exact": 10,
+     "n_paragraphs": 32
+    }
+   }
+  },
+  "pooled_out_of_sample": {
+   "precision": 0.4825,
+   "recall": 0.5111,
+   "f1": 0.4964,
+   "tp": 69,
+   "predicted": 143,
+   "truth": 135
+  },
+  "params": {
+   "target": 17,
+   "hard_max": 18,
+   "w_bal": 0.25,
+   "w_over": 2.0,
+   "min_units": 1,
+   "max_units": 5,
+   "w_short": 20.0,
+   "w_long": 8.0,
+   "w_open": 0.0,
+   "w_close": 4.0
+  },
+  "in_sample": {
+   "precision": 0.6103,
+   "recall": 0.6148,
+   "f1": 0.6125,
+   "tp": 83,
+   "predicted": 136,
+   "truth": 135,
+   "paragraphs_exact": 28,
+   "n_paragraphs": 64
+  },
+  "baseline_greedy": {
+   "precision": 0.2712,
+   "recall": 0.237,
+   "f1": 0.253,
+   "tp": 32,
+   "predicted": 118,
+   "truth": 135,
+   "paragraphs_exact": 2,
+   "n_paragraphs": 64
+  },
+  "width_evidence": {
+   "n_breaks": 135,
+   "n_joins": 135,
+   "narrowest_break_width": 6,
+   "widest_join_width": 53,
+   "joins_wider_than_the_narrowest_break": 135,
+   "break_width_median": 15,
+   "join_width_median": 32,
+   "a_width_threshold_separates_them": false
+  },
+  "break_rates": {
+   "by_units_on_the_line": {
+    "1": {
+     "n": 64,
+     "breaks": 4,
+     "rate": 0.0625
+    },
+    "2": {
+     "n": 64,
+     "breaks": 34,
+     "rate": 0.5312
+    },
+    "3": {
+     "n": 64,
+     "breaks": 27,
+     "rate": 0.4219
+    },
+    "4": {
+     "n": 63,
+     "breaks": 22,
+     "rate": 0.3492
+    },
+    "5": {
+     "n": 58,
+     "breaks": 20,
+     "rate": 0.3448
+    },
+    "6": {
+     "n": 48,
+     "breaks": 15,
+     "rate": 0.3125
+    },
+    "7": {
+     "n": 35,
+     "breaks": 7,
+     "rate": 0.2
+    },
+    "8": {
+     "n": 21,
+     "breaks": 2,
+     "rate": 0.0952
+    },
+    "9": {
+     "n": 10,
+     "breaks": 3,
+     "rate": 0.3
+    },
+    "10": {
+     "n": 5,
+     "breaks": 0,
+     "rate": 0.0
+    },
+    "11": {
+     "n": 2,
+     "breaks": 1,
+     "rate": 0.5
+    },
+    "12": {
+     "n": 1,
+     "breaks": 0,
+     "rate": 0.0
+    },
+    "13": {
+     "n": 1,
+     "breaks": 0,
+     "rate": 0.0
+    }
+   },
+   "by_width_band": {
+    "12-15": {
+     "n": 26,
+     "breaks": 16,
+     "rate": 0.6154
+    },
+    "16-19": {
+     "n": 40,
+     "breaks": 17,
+     "rate": 0.425
+    },
+    "20-23": {
+     "n": 47,
+     "breaks": 13,
+     "rate": 0.2766
+    },
+    "24-27": {
+     "n": 32,
+     "breaks": 16,
+     "rate": 0.5
+    },
+    "28+": {
+     "n": 191,
+     "breaks": 52,
+     "rate": 0.2723
+    },
+    "4-7": {
+     "n": 53,
+     "breaks": 2,
+     "rate": 0.0377
+    },
+    "8-11": {
+     "n": 47,
+     "breaks": 19,
+     "rate": 0.4043
+    }
+   }
+  },
+  "how": "every candidate line is scored and a dynamic program picks the cheapest partition; the weights are fitted on the corpus and scored on held-out paragraphs"
+ },
  "wrap_params": {
   "soft": 18,
   "max_units": 4,
@@ -440,6 +651,33 @@
    "10": 1
   },
   "frac_units_2_to_4": 0.9804,
+  "n_lines": 203,
+  "width_median": 16,
+  "width_max": 22,
+  "width_min": 11,
+  "units_per_line_hist": {
+   "2": 105,
+   "3": 93,
+   "4": 4,
+   "5": 1
+  }
+ },
+ "line_profile_cost": 0.0905,
+ "metrics_generated_greedy": {
+  "n_units": 510,
+  "unit_len_mean": 3.055,
+  "unit_len_median": 3,
+  "unit_len_hist": {
+   "1": 5,
+   "2": 156,
+   "3": 172,
+   "4": 172,
+   "5": 1,
+   "6": 1,
+   "8": 2,
+   "10": 1
+  },
+  "frac_units_2_to_4": 0.9804,
   "n_lines": 226,
   "width_median": 15,
   "width_max": 20,
@@ -451,7 +689,7 @@
    "4": 1
   }
  },
- "line_profile_cost": 0.3489,
+ "line_profile_cost_greedy": 0.3489,
  "generated_boundary_alignment": {
   "n_cuts": 446,
   "on_jieba_boundary": 1.0,

@@ -35,10 +35,11 @@ def clipboard_flow(keep_punct=False, quiet=False):
         return 2
     corpus = str(engine.find_data("nmud.txt"))
     cache = str(engine.find_data("nmud_style_params.json"))
-    _, params, openers, closers, soft, mu = engine.fit(cache, corpus, quiet=True)
+    _, params, openers, closers, soft, mu, lb = engine.fit(cache, corpus,
+                                                          quiet=True)
     styled = engine.style_text(text, params, openers, closers,
                                 soft=soft, mu=mu,
-                                drop_punct=not keep_punct)
+                                drop_punct=not keep_punct, lb=lb)
     try:
         pyperclip.copy(styled)
     except Exception as exc:

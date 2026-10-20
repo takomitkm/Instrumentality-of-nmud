@@ -116,7 +116,7 @@ num_checks = [
     ("gen 2-4 frac", "98.0%", round(mg["frac_units_2_to_4"] * 100, 1)),
     ("gen units", "510", mg["n_units"]),
     ("author width med", "16", ma["width_median"]),
-    ("gen width med", "15", mg["width_median"]),
+    ("gen width med", "16", mg["width_median"]),
     ("round trip identical", "367", rt["identical_units_set"]),
     ("round trip clean identical", "356", rt2["identical_units_set"]),
     ("round trip clean author", "484", rt2["n_author"]),
@@ -133,6 +133,17 @@ num_checks = [
     ("random mean", "55.15%", round(rules["null_model_random_cuts"]["mean"] * 100, 2)),
     ("old model F1", "0.5074", 0.5074),
     ("baseline F1", "0.5065", 0.5065),
+    ("lb in-sample F1", "0.6125", sty["line_break"]["in_sample"]["f1"]),
+    ("lb in-sample P", "0.6103", sty["line_break"]["in_sample"]["precision"]),
+    ("lb in-sample R", "0.6148", sty["line_break"]["in_sample"]["recall"]),
+    ("lb pooled F1", "0.4964", sty["line_break"]["pooled_out_of_sample"]["f1"]),
+    ("lb pooled P", "0.4825", sty["line_break"]["pooled_out_of_sample"]["precision"]),
+    ("lb pooled R", "0.5111", sty["line_break"]["pooled_out_of_sample"]["recall"]),
+    ("lb foldA F1", "0.5197", sty["line_break"]["folds"]["A"]["test"]["f1"]),
+    ("lb foldB F1", "0.4768", sty["line_break"]["folds"]["B"]["test"]["f1"]),
+    ("lb greedy F1", "0.2530", sty["line_break"]["baseline_greedy"]["f1"]),
+    ("lb greedy P", "0.2712", sty["line_break"]["baseline_greedy"]["precision"]),
+    ("lb greedy R", "0.2370", sty["line_break"]["baseline_greedy"]["recall"]),
 ]
 def _as_number(text):
     """The report writes 0.8095 and 95.8%; the JSON stores 0.8095 and 0.958."""
@@ -352,6 +363,89 @@ check("demo3 default == the hand-typed punctuation-free run", d3 == d4)
 check("report: the punctuation rule is stated",
       "标点按作者自己的用法处理" in rep and "从不独立成单元" in rep)
 check("report: --keep-punct is documented", "--keep-punct" in rep)
+
+# ------------------------------------------- 6. the line break model
+lb = sty["line_break"]
+we = lb["width_evidence"]
+br = lb["break_rates"]
+bu = br["by_units_on_the_line"]
+bw = br["by_width_band"]
+
+# the decisive test: can a width threshold tell the author's breaks from
+# the author's joins?  Recomputed from the JSON, never copied from the
+# report.
+check("lb: 135 breaks and 135 joins",
+      we["n_breaks"] == 135 and we["n_joins"] == 135,
+      "%d/%d" % (we["n_breaks"], we["n_joins"]))
+check("lb: the narrowest break is 6 columns",
+      we["narrowest_break_width"] == 6, str(we["narrowest_break_width"]))
+check("lb: the widest join is 53 columns",
+      we["widest_join_width"] == 53, str(we["widest_join_width"]))
+check("lb: every join is wider than the narrowest break",
+      we["joins_wider_than_the_narrowest_break"] == we["n_joins"])
+check("lb: no width threshold separates them",
+      we["a_width_threshold_separates_them"] is False)
+check("lb: the report states the widths",
+      "6 列" in rep and "53 列" in rep)
+check("lb: the report states that no threshold separates them",
+      "宽度阈值根本分不开两者" in rep)
+
+# the axis that does work: how many units the line already holds
+check("lb: break rate after one unit is 0.0625",
+      bu["1"]["rate"] == 0.0625 and bu["1"]["n"] == 64, str(bu["1"]))
+check("lb: break rate after two units is 0.5312",
+      bu["2"]["rate"] == 0.5312 and bu["2"]["n"] == 64, str(bu["2"]))
+check("lb: break rate after three units is 0.4219",
+      bu["3"]["rate"] == 0.4219, str(bu["3"]))
+check("lb: the break rate falls off after four units",
+      bu["5"]["rate"] < bu["2"]["rate"] and bu["8"]["rate"] < bu["2"]["rate"])
+check("lb: the report quotes the break rates",
+      "0.0625" in rep and "0.5312" in rep and "0.4219" in rep)
+check("lb: the width bands peak in the middle",
+      bw["12-15"]["rate"] > bw["4-7"]["rate"]
+      and bw["28+"]["rate"] < bw["12-15"]["rate"], str(bw["28+"]))
+
+# the fitted model
+bp = lb["params"]
+check("lb: target 17 and hard_max 18",
+      bp["target"] == 17 and bp["hard_max"] == 18, str(bp))
+check("lb: the model beats the greedy wrapper in sample",
+      lb["in_sample"]["f1"] > lb["baseline_greedy"]["f1"])
+check("lb: the model beats the greedy wrapper out of sample",
+      lb["pooled_out_of_sample"]["f1"] > lb["baseline_greedy"]["f1"])
+check("lb: 28 of 64 paragraphs exactly right",
+      lb["in_sample"]["paragraphs_exact"] == 28
+      and lb["in_sample"]["n_paragraphs"] == 64)
+check("lb: the greedy wrapper got 2 of 64 paragraphs right",
+      lb["baseline_greedy"]["paragraphs_exact"] == 2)
+check("lb: the line profile got closer to the author",
+      sty["line_profile_cost"] < sty["line_profile_cost_greedy"],
+      "%s vs %s" % (sty["line_profile_cost"], sty["line_profile_cost_greedy"]))
+check("lb: the report states the model",
+      "w_bal" in rep and "hard_max" in rep and "收字" in rep)
+
+# the shipped parameters must carry the fitted model
+shipped = json.load(open(os.path.join(ROOT, "nmud_style", "data",
+                                       "nmud_style_params.json"),
+                          encoding="utf-8"))
+check("lb: the shipped parameters carry the line break model",
+      "line_break" in shipped)
+check("lb: the shipped weights are the fitted ones",
+      shipped.get("line_break", {}).get("params") == bp)
+
+# the browser build must run the same model
+js = open(os.path.join(ROOT, "web", "style.js"), encoding="utf-8").read()
+app = open(os.path.join(ROOT, "web", "app.js"), encoding="utf-8").read()
+chk = open(os.path.join(ROOT, "web", "check.js"), encoding="utf-8").read()
+check("lb: the browser has the same line break model", "function wrapDp(" in js)
+check("lb: the page loads the model", "line_break" in app and "model.lb" in app)
+check("lb: the browser check measures the breaks", "wrapDp" in chk
+      and "line break f1" in chk)
+
+# the weight search must not be shadowed by the model loader any more
+eng = open(os.path.join(ROOT, "nmud_style", "engine.py"), encoding="utf-8").read()
+check("engine: the weight search is not shadowed",
+      "def fit_weights(" in eng and "def fit(cache_path" in eng)
 
 print("PASS %d" % len(oks))
 print("FAIL %d" % len(fails))

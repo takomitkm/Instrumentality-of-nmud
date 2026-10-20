@@ -5,7 +5,7 @@
 [X: 柠檬味的猫粮🍥 (@realnmudml)](https://x.com/realnmudml)
 [Telegram: @nmudmlclub](https://t.me/nmudmlclub)
 
-**nmud 语言风格生成器**——对 nmud 的拙劣模仿：词被切成短单元，单元之间一个空格，一行放两到四个单元。
+**nmud 语言风格生成器**——对 nmud 的拙劣模仿：词被切成短单元，单元之间一个空格，一行放两到三个单元。
 
 ```text
 输入：今天买了个新玩具，蓝色的，会发光，匀速的shake shake。
@@ -15,6 +15,8 @@
 ```
 
 不是"随机断行"，也不是"每行固定字数"——是把**语料里那位作者的切分习惯**学出来再套上去：切点跟着语义块走，标点按他本人的用法处理（只留 `…？！""`，句号逗号一律不出现，标点贴在词上不占一格）。
+
+**换行也有规律，但不是"排到一定宽度就折"**：最窄的折行点只有 6 列，最宽的连行有 53 列，135 个连行点全部宽过最窄的折行点——宽度阈值根本分不开两者。真正的轴是**一行攒了几个单元**（放 1 个时只有 6.3% 会断，2–3 个时 42%–53%）。把它写成动态规划（宽度往 17 列靠、不超 18 列、尽量断在收字后），对着作者自己的折行点留出 F1 0.4964、整段全对 28/64 段，是旧贪心折行（0.2530、2/64 段）的两倍以上。详见[报告](nmud_corpus_report.md) §3.3–§3.4。
 
 ## [灵感](https://t.me/nayuta_yu/7211)
 ```
@@ -107,11 +109,11 @@ nmud-style --demo          # 内置例子
 | # | 成分 | 是什么 | 在哪 |
 | --- | --- | --- | --- |
 | 1 | **数据集** | nmud 语料，199 行、5087 字节、**按原始字节存（CRLF）**——报告里引用的字节数与行尾数就是它的证据 | [`nmud_style/data/nmud.txt`](nmud_style/data/nmud.txt) · [副本](guest/tools/nmud.txt) |
-| 2 | **模型** | 五特征生成式模型 + 折行参数（软宽 18、每行 ≤4 单元），网格搜索 + 段落级两折留出选出 | [`nmud_style/data/nmud_style_params.json`](nmud_style/data/nmud_style_params.json) |
+| 2 | **模型** | 五特征生成式模型（切分）+ 折行动态规划（每行 2–3 单元、宽度往 17 列靠、不超 18 列），网格搜索 + 段落级两折留出选出 | [`nmud_style/data/nmud_style_params.json`](nmud_style/data/nmud_style_params.json) |
 | 3 | **环境补全** | 校机侧：查虚拟环境、jieba、包与数据文件，缺什么装什么，再跑自检；本机侧：给"自己跑生成器"的设备装进仓库的 `.venv` | 校机 [`guest/setup_env.ps1`](guest/setup_env.ps1) · 本机 [`setup_env.py`](setup_env.py)（[`setup-guest.bat`](setup-guest.bat) / [`setup.sh`](setup.sh) 是包装） |
 | 4 | **生成器** | 引擎（切分、折行、篇章）、命令行、剪切板流程、环境检测，全部自包含，数据在 `data/` 里 | [`nmud_style/`](nmud_style/)（[`engine.py`](nmud_style/engine.py) · [`cli.py`](nmud_style/cli.py) · [`envcheck.py`](nmud_style/envcheck.py)） |
 | 5 | **SOP** | 一次可复现的完整流程：分析、拟合、生成、验收、25 条踩过的坑 | [`SOP-nmud-style.md`](SOP-nmud-style.md) |
-| 6 | **验收** | 102 项校验：报告里每个数字都从 json 复算并与报告对账，另有"标点不独立成单元""默认输出 == 人工去标点版"的断言 | [`checks/check_report.py`](checks/check_report.py) |
+| 6 | **验收** | 139 项校验：报告里每个数字都从 json 复算并与报告对账，另有"标点不独立成单元""默认输出 == 人工去标点版"的断言 | [`checks/check_report.py`](checks/check_report.py) |
 
 配套的东西：
 
@@ -167,9 +169,11 @@ python -m http.server 8000
 | 指标 | 值 |
 | --- | --- |
 | 留出 F1（两折合并） | **0.8095**（P 0.7992 / R 0.8200） |
+| 折行留出 F1（两折合并） | **0.4964**（P 0.4825 / R 0.5111），旧贪心折行 0.2530 |
+| 折行整段全对 | **28/64 段**，旧贪心折行 2/64 段 |
 | 往返（删掉作者空格再切，逐字一致） | **367/500 = 73.4%** |
 | 基线（每个词都切）F1 | 0.5065 |
-| 验收 | `PASS 102 / FAIL 0` |
+| 验收 | `PASS 139 / FAIL 0` |
 
 细节和读数来源见 [结论报告](nmud_corpus_report.md)；复现步骤见 [SOP](SOP-nmud-style.md)。
 

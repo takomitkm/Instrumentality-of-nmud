@@ -43,6 +43,7 @@ const model = JSON.parse(fs.readFileSync(paramsPath, "utf8"));
 const params = model.params;
 const openers = new Set(model.openers);
 const closers = new Set(model.closers);
+const lbParams = model.line_break ? model.line_break.params : null;
 
 const raw = fs.readFileSync(corpusPath, "utf8").replace(/\r\n/g, "\n");
 
@@ -57,22 +58,37 @@ if (cur.length) { paras.push(cur); }
 
 let tp = 0, pn = 0, tn = 0;
 const unitLines = [];
+const lbCases = [];   // the author's own units and break positions
 for (const lines of paras) {
   // The author's own units: the stream without the whitespace, and the
   // offsets where each unit starts.
   let stream = "";
   const truth = [];
+  const lbUnits = [];
   for (const l of lines) {
     let seg = null;
     for (const ch of l) {
       if (ch === " " || ch === " ") {
-        if (seg !== null) { truth.push(seg); seg = null; }
+        if (seg !== null) { truth.push(seg); lbUnits.push(stream.slice(seg)); seg = null; }
       } else {
         if (seg === null) { seg = stream.length; }
         stream += ch;
       }
     }
-    if (seg !== null) { truth.push(seg); }
+    if (seg !== null) { truth.push(seg); lbUnits.push(stream.slice(seg)); }
+  }
+  // The author breaks between the last unit of a line and the first unit
+  // of the next one, so the break index is the running count of the
+  // units minus one.
+  const lbWant = new Set();
+  {
+    let n = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const c = lines[i].split(/[  ]+/).filter((x) => x).length;
+      if (i < lines.length - 1) { lbWant.add(n + c - 1); }
+      n += c;
+    }
+    if (lbUnits.length > 1) { lbCases.push({ units: lbUnits, want: lbWant }); }
   }
 
   const words = sandbox.NmudStyle.wordsAndSegs(stream);
@@ -95,6 +111,33 @@ console.log("precision        :", precision.toFixed(4));
 console.log("recall           :", recall.toFixed(4));
 console.log("f1               :", f1.toFixed(4));
 console.log("tp/pred/truth    :", tp, "/", pn, "/", tn);
+
+// ------------------------------------------------------------------
+// the line break model, measured the same way as the Python build
+// ------------------------------------------------------------------
+if (lbParams) {
+  let ltp = 0, lpn = 0, ltn = 0, exact = 0;
+  for (const c of lbCases) {
+    const units = c.units.map((u) => [u, " "]);
+    const lines = sandbox.NmudStyle.wrapDp(units, openers, closers, lbParams);
+    const got = new Set();
+    let acc = 0;
+    for (const ln of lines.slice(0, -1)) { acc += ln.length; got.add(acc - 1); }
+    lpn += got.size;
+    ltn += c.want.size;
+    for (const g of got) { if (c.want.has(g)) { ltp++; } }
+    if (got.size === c.want.size && [...got].every((g) => c.want.has(g))) { exact++; }
+  }
+  const lp = lpn ? ltp / lpn : 0;
+  const lr = ltn ? ltp / ltn : 0;
+  const lf = (lp + lr) ? 2 * lp * lr / (lp + lr) : 0;
+  console.log("");
+  console.log("line break precision :", lp.toFixed(4));
+  console.log("line break recall    :", lr.toFixed(4));
+  console.log("line break f1        :", lf.toFixed(4));
+  console.log("line break tp/pred/truth :", ltp, "/", lpn, "/", ltn);
+  console.log("paragraphs exact     :", exact, "/", lbCases.length);
+}
 
 if (unitsOut) {
   fs.writeFileSync(unitsOut, unitLines.join("\n") + "\n", "utf8");

@@ -99,8 +99,8 @@ def self_test(python):
         "from nmud_style import engine;"
         "c=str(engine.find_data('nmud.txt'));"
         "k=str(engine.find_data('nmud_style_params.json'));"
-        "_,p,o,c2,s,m=engine.fit(k,c,quiet=True);"
-        "t=engine.style_text('今天买了个新玩具，蓝色的。',p,o,c2,soft=s,mu=m);"
+        "_,p,o,c2,s,m,lb=engine.fit(k,c,quiet=True);"
+        "t=engine.style_text('今天买了个新玩具，蓝色的。',p,o,c2,soft=s,mu=m,lb=lb);"
         "print(t.replace(chr(10),' / '))" % str(ROOT)
     )
     rc, out = run([str(python), "-c", code])

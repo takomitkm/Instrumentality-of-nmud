@@ -291,6 +291,57 @@
     return lines;
   }
 
+  function wrapDp(units, openers, closers, p) {
+    // The line break model.  The author does not wrap to a fixed width,
+    // so every candidate line is scored and a dynamic program picks the
+    // cheapest partition:
+    //
+    //   w_bal   * (width - target)^2        keep the column balanced
+    //   w_over  * max(0, width - hard_max)  a line that is too wide
+    //   w_short * max(0, min_units - n)     a line with too few units
+    //   w_long  * max(0, n - max_units)      a line with too many units
+    //   -w_open  if the next unit starts with an opener character
+    //   -w_close if the last unit ends with a closer character
+    //
+    // Same weights and same cost as nmud_style/engine.py, so the two
+    // builds break the lines the same way.
+    var n = units.length;
+    if (!n) { return []; }
+    var best = new Array(n + 1);
+    var back = new Array(n + 1);
+    for (var i = 0; i <= n; i++) { best[i] = Infinity; back[i] = -1; }
+    best[0] = 0;
+    for (var j = 1; j <= n; j++) {
+      for (var i = Math.max(0, j - p.max_units); i < j; i++) {
+        if (best[i] === Infinity) { continue; }
+        var w = 0;
+        for (var k = i; k < j; k++) { w += displayWidth(units[k][0]); }
+        w += j - i - 1;
+        var nU = j - i;
+        var c = best[i];
+        var d = w - p.target;
+        c += p.w_bal * d * d;
+        if (w > p.hard_max) { c += p.w_over * (w - p.hard_max); }
+        if (nU < p.min_units) { c += p.w_short * (p.min_units - nU); }
+        if (nU > p.max_units) { c += p.w_long * (nU - p.max_units); }
+        if (j < n) {
+          if (openers.has(units[j][0].charAt(0))) { c -= p.w_open; }
+          if (closers.has(units[j - 1][0].slice(-1))) { c -= p.w_close; }
+        }
+        if (c < best[j]) { best[j] = c; back[j] = i; }
+      }
+    }
+    var lines = [];
+    var jj = n;
+    while (jj > 0 && back[jj] >= 0) {
+      var ii = back[jj];
+      lines.push(units.slice(ii, jj));
+      jj = ii;
+    }
+    lines.reverse();
+    return lines;
+  }
+
   function glueLeftoverPunct(units) {
     // A mark that is still a unit of its own is glued to a word.
     var out = [];
@@ -320,7 +371,7 @@
     return out;
   }
 
-  function render(plain, p, openers, closers, soft, maxUnits, dropPunct) {
+  function render(plain, p, openers, closers, soft, maxUnits, dropPunct, lb) {
     var units = [];
     var chunks = splitChunks(dropPunct ? stripUnusedPunct(plain) : plain);
     for (var c = 0; c < chunks.length; c++) {
@@ -334,13 +385,14 @@
       }
     }
     units = glueLeftoverPunct(units);
-    var lines = wrap(units, soft, maxUnits, 2);
+    var lines = lb ? wrapDp(units, openers, closers, lb)
+                   : wrap(units, soft, maxUnits, 2);
     var bodies = [];
     for (var l = 0; l < lines.length; l++) { bodies.push(joinUnits(lines[l])); }
     return { text: bodies.join("\n"), units: units, lines: lines };
   }
 
-  function styleText(raw, p, openers, closers, soft, maxUnits, dropPunct) {
+  function styleText(raw, p, openers, closers, soft, maxUnits, dropPunct, lb) {
     // Blank lines separate the paragraphs; a line break inside a
     // paragraph is a boundary the writer chose, so the lines are joined
     // with a space.
@@ -359,7 +411,7 @@
     for (var q = 0; q < paras.length; q++) {
       var body = paras[q].map(function (l) { return l.replace(/\s+$/, ""); }).join(" ");
       blocks.push(render(body, p, openers, closers,
-                         soft, maxUnits, dropPunct).text);
+                         soft, maxUnits, dropPunct, lb).text);
     }
     return blocks.join("\n\n") + "\n";
   }
@@ -371,6 +423,7 @@
     scriptClass: scriptClass,
     wordsAndSegs: wordsAndSegs,
     dpSegment: dpSegment,
-    displayWidth: displayWidth
+    displayWidth: displayWidth,
+    wrapDp: wrapDp
   };
 })(typeof window !== "undefined" ? window : globalThis);

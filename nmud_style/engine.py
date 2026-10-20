@@ -482,7 +482,13 @@ GRID = {
 }
 
 
-def fit(data, openers, closers):
+def fit_weights(data, openers, closers):
+    """Grid search for the unit segmentation weights.
+
+    Named `fit_weights`, not `fit`: the module also has a `fit` that
+    loads or refits the whole model from the corpus, and a later
+    definition of the same name silently shadowed this one, so
+    `analyse` called the wrong function and `--refit` crashed."""
     best = None
     keys = ["w_open", "w_close", "w_posstart", "w_posend", "w_de_next", "w_de_prev"]
     vals = [GRID[k] for k in keys]
@@ -601,6 +607,309 @@ def wrap(units, soft=18, max_units=3, min_units=2):
     return lines
 
 
+# ------------------------------------------------------------------
+# line breaking
+# ------------------------------------------------------------------
+# The author does not wrap to a fixed width.  The corpus lines run from
+# 6 to 29 display columns, and no threshold separates the author's
+# breaks from the author's non-breaks: the narrowest place the author
+# stopped is 6 columns and the widest stretch the author carried on is
+# 53, so all 135 joins are wider than the narrowest break.  A greedy
+# wrapper therefore cannot reproduce the author, and the measured F1 of
+# the greedy wrapper against the author's own breaks is 0.25.
+#
+# What the author does do is measurable:
+#
+#   * a line holds 2 or 3 units.  95% of the lines do; breaking after
+#     a single unit happens 4 times in 199 lines.
+#   * the break rate rises and then falls with the width, and it rises
+#     with the number of units on the line: after one unit the author
+#     breaks 6% of the time, after two or three units 42% to 53%.
+#   * the break falls after a unit that ends a clause.
+#
+# So the model scores every candidate line and a dynamic program picks
+# the partition with the lowest total cost.  The weights are fitted on
+# the corpus and validated on held-out paragraphs.
+
+LB_GRID = {
+    "target": [12, 14, 15, 16, 17, 18, 20],
+    "hard_max": [16, 18, 20, 22, 24, 26, 30],
+    "w_bal": [0.1, 0.25, 0.5, 1.0, 2.0],
+    "w_over": [1.0, 2.0, 5.0, 10.0],
+    "min_units": [1, 2, 3],
+    "max_units": [3, 4, 5, 6],
+    "w_short": [3.0, 8.0, 20.0, 50.0],
+    "w_long": [3.0, 8.0, 20.0, 50.0],
+    "w_open": [0.0, 1.0, 2.0, 4.0],
+    "w_close": [0.0, 1.0, 2.0, 4.0],
+}
+
+LB_START = {"target": 16, "hard_max": 20, "w_bal": 1.0, "w_over": 5.0,
+            "min_units": 2, "max_units": 3, "w_short": 8.0, "w_long": 8.0,
+            "w_open": 1.0, "w_close": 1.0}
+
+
+def wrap_dp(units, openers, closers, p):
+    """Break the units into lines with a dynamic program.
+
+    `units` is a list of (text, separator) pairs.  The cost of a
+    candidate line is
+
+        w_bal   * (width - target)^2        keep the column balanced
+        w_over  * max(0, width - hard_max)  a line that is too wide
+        w_short * max(0, min_units - n)     a line with too few units
+        w_long  * max(0, n - max_units)      a line with too many units
+        -w_open  if the next unit starts with an opener character
+        -w_close if the last unit ends with a closer character
+
+    The partition with the lowest total cost wins.  The opener and
+    closer characters are the same sets the unit segmentation uses, so
+    the browser build needs nothing that the Python build does not
+    already have."""
+    n = len(units)
+    if n == 0:
+        return []
+    inf = float("inf")
+    best = [inf] * (n + 1)
+    back = [None] * (n + 1)
+    best[0] = 0.0
+    for j in range(1, n + 1):
+        for i in range(max(0, j - p["max_units"]), j):
+            if best[i] == inf:
+                continue
+            w = sum(display_width(unit_text(units[k])) for k in range(i, j))
+            w += j - i - 1
+            n_u = j - i
+            c = best[i]
+            c += p["w_bal"] * (w - p["target"]) ** 2
+            if w > p["hard_max"]:
+                c += p["w_over"] * (w - p["hard_max"])
+            if n_u < p["min_units"]:
+                c += p["w_short"] * (p["min_units"] - n_u)
+            if n_u > p["max_units"]:
+                c += p["w_long"] * (n_u - p["max_units"])
+            if j < n:            # a real break point
+                if unit_text(units[j])[0] in openers:
+                    c -= p["w_open"]
+                if unit_text(units[j - 1])[-1] in closers:
+                    c -= p["w_close"]
+            if c < best[j]:
+                best[j] = c
+                back[j] = i
+    lines = []
+    j = n
+    while j > 0 and back[j] is not None:
+        i = back[j]
+        lines.append(units[i:j])
+        j = i
+    lines.reverse()
+    return lines
+
+
+def lb_cases(paragraphs):
+    """The author's own units and break positions, paragraph by paragraph.
+
+    A unit ends at a space (either kind) or at a line end, so the unit
+    stream of a paragraph is read straight off the author's lines.  The
+    width of every line is kept too: the width at a break and the width
+    of a pair the author kept together are what decide whether a fixed
+    width could explain the breaks."""
+    cases = []
+    for lines in paragraphs:
+        units = []
+        want = set()
+        widths = []
+        for li, line in enumerate(lines):
+            lus = [u for u in re.split(r"[  ]+", line) if u]
+            for u in lus:
+                units.append(u)
+            if li < len(lines) - 1:
+                want.add(len(units) - 1)
+            widths.append(display_width(line))
+        if len(units) > 1:
+            cases.append((units, want, widths))
+    return cases
+
+
+def lb_width_evidence(cases):
+    """Can a width threshold tell the author's breaks from the author's joins?
+
+    A break at width W means the author stopped the line there.  A join
+    at width W means the author carried W columns of text on one line.
+    If some join is wider than some break, no threshold on the width
+    can separate the two, and the breaks are not a fixed wrap width."""
+    break_widths, join_widths = [], []
+    for _units, _want, widths in cases:
+        for i, w in enumerate(widths):
+            if i < len(widths) - 1:
+                break_widths.append(w)                     # stopped here
+                join_widths.append(w + 1 + widths[i + 1])   # or carried on
+    if not break_widths:
+        return {}
+    narrowest = min(break_widths)
+    widest = max(join_widths)
+    return {
+        "n_breaks": len(break_widths),
+        "n_joins": len(join_widths),
+        "narrowest_break_width": narrowest,
+        "widest_join_width": widest,
+        "joins_wider_than_the_narrowest_break":
+            sum(1 for w in join_widths if w > narrowest),
+        "break_width_median": sorted(break_widths)[len(break_widths) // 2],
+        "join_width_median": sorted(join_widths)[len(join_widths) // 2],
+        "a_width_threshold_separates_them": widest <= narrowest,
+    }
+
+
+def lb_score(cases, p, openers, closers):
+    """Precision, recall and F1 of the break positions against the author."""
+    hit = gen = exact = 0
+    truth = sum(len(w) for _, w, _wd in cases)
+    for units, want, _wd in cases:
+        lines = wrap_dp([(u, " ") for u in units], openers, closers, p)
+        got = set()
+        acc = 0
+        for ln in lines[:-1]:
+            acc += len(ln)
+            got.add(acc - 1)
+        hit += len(got & want)
+        gen += len(got)
+        if got == want:
+            exact += 1
+    precision = hit / gen if gen else 0.0
+    recall = hit / truth if truth else 0.0
+    f1 = (2 * precision * recall / (precision + recall)
+          if (precision + recall) else 0.0)
+    return {"precision": round(precision, 4), "recall": round(recall, 4),
+            "f1": round(f1, 4), "tp": hit, "predicted": gen, "truth": truth,
+            "paragraphs_exact": exact, "n_paragraphs": len(cases)}
+
+
+def lb_fit(cases, openers, closers, start=None):
+    """Coordinate ascent on the break F1."""
+    p = dict(start) if start else dict(LB_START)
+    cur = lb_score(cases, p, openers, closers)["f1"]
+    for _ in range(4):
+        improved = False
+        for k, values in LB_GRID.items():
+            best_v, best_f = p[k], cur
+            for v in values:
+                if v == p[k]:
+                    continue
+                q = dict(p)
+                q[k] = v
+                f = lb_score(cases, q, openers, closers)["f1"]
+                if f > best_f + 1e-9:
+                    best_f, best_v = f, v
+            if best_v != p[k]:
+                p[k] = best_v
+                cur = best_f
+                improved = True
+        if not improved:
+            break
+    return p, cur
+
+
+def lb_break_rates(cases):
+    """How often the author breaks, by the number of units on the line and
+    by the width of the line.
+
+    The numbers are what the model is built on: the break rate rises
+    with the width, and a line of two or three units is what the author
+    mostly writes.  The widths are grouped in bands of four columns,
+    because a single width holds too few lines to say anything."""
+    by_units, by_width = {}, {}
+    for units, want, _wd in cases:
+        # every position between two units is either a break or a join
+        for k in range(len(units) - 1):
+            n_units = k + 1
+            width = sum(display_width(u) for u in units[:n_units]) + n_units - 1
+            broke = k in want
+            d = by_units.setdefault(n_units, {"n": 0, "breaks": 0})
+            d["n"] += 1
+            d["breaks"] += 1 if broke else 0
+            band = "%d-%d" % (width - width % 4, width - width % 4 + 3)
+            if width >= 28:
+                band = "28+"
+            d = by_width.setdefault(band, {"n": 0, "breaks": 0})
+            d["n"] += 1
+            d["breaks"] += 1 if broke else 0
+    def rates(table):
+        return {str(k): {"n": v["n"], "breaks": v["breaks"],
+                         "rate": round(v["breaks"] / v["n"], 4)}
+                for k, v in sorted(table.items(),
+                                   key=lambda kv: (isinstance(kv[0], str),
+                                                   kv[0]))}
+    return {"by_units_on_the_line": rates(by_units),
+            "by_width_band": rates(by_width)}
+
+
+def fit_line_break(paragraphs, openers, closers, quiet=False):
+    """Fit the line break model and validate it out of sample.
+
+    The paragraphs are split in two halves the same way the unit
+    segmentation is: fit on one half, score on the other, both
+    directions.  The greedy wrapper the model replaces is scored on the
+    same paragraphs, so the two numbers are comparable."""
+    cases = lb_cases(paragraphs)
+    half = len(cases) // 2
+    folds = [("A", cases[:half], cases[half:]),
+             ("B", cases[half:], cases[:half])]
+    out = {"folds": {}}
+    for tag, train, test in folds:
+        p, train_f1 = lb_fit(train, openers, closers)
+        out["folds"][tag] = {"params": p, "train": train_f1,
+                             "test": lb_score(test, p, openers, closers)}
+        if not quiet:
+            print(f"line break fold {tag}: {p}")
+            print(f"   train F1 {train_f1}  test {out['folds'][tag]['test']}")
+    tp = sum(out["folds"][t]["test"]["tp"] for t, _tr, _te in folds)
+    pn = sum(out["folds"][t]["test"]["predicted"] for t, _tr, _te in folds)
+    tn = sum(out["folds"][t]["test"]["truth"] for t, _tr, _te in folds)
+    pr = tp / pn if pn else 0.0
+    rc = tp / tn if tn else 0.0
+    out["pooled_out_of_sample"] = {
+        "precision": round(pr, 4), "recall": round(rc, 4),
+        "f1": round(2 * pr * rc / (pr + rc), 4) if (pr + rc) else 0.0,
+        "tp": tp, "predicted": pn, "truth": tn}
+    params, insample = lb_fit(cases, openers, closers)
+    out["params"] = params
+    out["in_sample"] = lb_score(cases, params, openers, closers)
+    # the greedy wrapper this model replaces, measured the same way
+    greedy = {"precision": 0.0, "recall": 0.0, "f1": 0.0, "tp": 0,
+              "predicted": 0, "truth": 0, "paragraphs_exact": 0,
+              "n_paragraphs": len(cases)}
+    truth = sum(len(w) for _, w, _wd in cases)
+    hit = gen = exact = 0
+    for units, want, _wd in cases:
+        got = set()
+        start_i = 0
+        for i in range(1, len(units) + 1):
+            seg = units[start_i:i]
+            w = sum(display_width(u) for u in seg) + len(seg) - 1
+            if (w > 18 and len(seg) >= 2) or len(seg) > 3:
+                got.add(i - 1)
+                start_i = i
+        hit += len(got & want)
+        gen += len(got)
+        if got == want:
+            exact += 1
+    pr = hit / gen if gen else 0.0
+    rc = hit / truth if truth else 0.0
+    greedy.update({"precision": round(pr, 4), "recall": round(rc, 4),
+                   "f1": round(2 * pr * rc / (pr + rc), 4) if (pr + rc) else 0.0,
+                   "tp": hit, "predicted": gen, "truth": truth,
+                   "paragraphs_exact": exact})
+    out["baseline_greedy"] = greedy
+    out["width_evidence"] = lb_width_evidence(cases)
+    out["break_rates"] = lb_break_rates(cases)
+    out["how"] = ("every candidate line is scored and a dynamic program "
+                  "picks the cheapest partition; the weights are fitted "
+                  "on the corpus and scored on held-out paragraphs")
+    return params, out
+
+
+
 def glue_leftover_punct(units):
     """A mark that is still a unit of its own is glued to a word.
 
@@ -637,11 +946,14 @@ def glue_leftover_punct(units):
 
 
 def render(plain, p, openers, closers, soft=18, max_units=3,
-           drop_punct=True):
+           drop_punct=True, lb=None):
     """Plain text in, styled text out.
 
     Each whitespace-delimited chunk of the input is segmented on its own;
-    the whitespace between chunks is kept as the author wrote it."""
+    the whitespace between chunks is kept as the author wrote it.
+
+    `lb` is the fitted line break model.  Without it the lines are
+    broken by the greedy wrapper, which is the old behaviour."""
     if drop_punct:
         # The marks the author never uses are taken out before the text is
         # split into chunks, so each of them turns into a boundary the
@@ -657,7 +969,10 @@ def render(plain, p, openers, closers, soft=18, max_units=3,
         for k, (a, b) in enumerate(spans):
             units.append((text[a:b], sep if k == 0 else " "))
     units = glue_leftover_punct(units)
-    lines = wrap(units, soft=soft, max_units=max_units)
+    if lb:
+        lines = wrap_dp(units, openers, closers, lb)
+    else:
+        lines = wrap(units, soft=soft, max_units=max_units)
     return "\n".join(join_units(l) for l in lines), units, lines
 
 
@@ -715,7 +1030,7 @@ def analyse(paragraphs, fitted=None, quiet=False):
             openers, closers, o_stats, c_stats = derive_features(train_lines)
             train = prep(train_lines)
             test = prep(test_lines)
-            _, params, insample = fit(train, openers, closers)
+            _, params, insample = fit_weights(train, openers, closers)
             test_scores = evaluate(test, openers, closers, params)
             R["folds"][tag] = {"n_openers": len(openers),
                                "n_closers": len(closers),
@@ -742,6 +1057,10 @@ def analyse(paragraphs, fitted=None, quiet=False):
                     if R["folds"][t]["test"]["f1"] == best_f1][0]
         params = dict(R["folds"][best_tag]["params"])
         openers, closers, o_stats, c_stats = derive_features(paragraphs)
+        # the line break model is fitted on the same corpus, with the
+        # same two-fold hold-out
+        lb, R["line_break"] = fit_line_break(paragraphs, openers, closers,
+                                             quiet=quiet)
     else:
         R["folds"] = fitted["folds"]
         R["pooled_out_of_sample"] = fitted["pooled_out_of_sample"]
@@ -751,6 +1070,8 @@ def analyse(paragraphs, fitted=None, quiet=False):
         best_tag = fitted["chosen_params"]["from_fold"]
         o_stats = fitted["chosen_params"]["top_openers"]
         c_stats = fitted["chosen_params"]["top_closers"]
+        lb = fitted.get("line_break", {}).get("params")
+        R["line_break"] = fitted.get("line_break", {})
 
     # ---------------- stage 2: measure ----------------
     author_lines = []
@@ -860,15 +1181,28 @@ def analyse(paragraphs, fitted=None, quiet=False):
     # --------------------------------------------------------------
     # same metrics, same test, for author and generator
     # --------------------------------------------------------------
+    # The greedy wrapper is measured too, so the two models can be
+    # compared on the same paragraphs.
     gen_units, gen_lines = [], []
+    greedy_units_flat, greedy_lines = [], []
     for lines in paragraphs:
         s, _ = para_units(lines)
         _, u, l = render(s, params, openers, closers, soft=soft, max_units=mu)
-        gen_units += u
-        gen_lines += l
+        greedy_units_flat += u
+        greedy_lines += l
+        if lb:
+            _, u2, l2 = render(s, params, openers, closers, lb=lb)
+            gen_units += u2
+            gen_lines += l2
+        else:
+            gen_units += u
+            gen_lines += l
     R["metrics_author"] = m_author
     R["metrics_generated"] = style_metrics(gen_units, gen_lines)
     R["line_profile_cost"] = line_profile_cost(m_author, R["metrics_generated"])
+    R["metrics_generated_greedy"] = style_metrics(greedy_units_flat, greedy_lines)
+    R["line_profile_cost_greedy"] = line_profile_cost(
+        m_author, R["metrics_generated_greedy"])
 
     gen_cuts, jb = set(), set()
     off = 0
@@ -888,7 +1222,7 @@ def analyse(paragraphs, fitted=None, quiet=False):
         "on_jieba_boundary": round(len(gen_cuts & jb) / len(gen_cuts), 4),
         "author_on_the_same_test": 0.9767,
     }
-    return R, params, openers, closers, soft, mu
+    return R, params, openers, closers, soft, mu, lb
 
 
 # ------------------------------------------------------------------
@@ -919,7 +1253,8 @@ def fit(cache_path, corpus_path, refit=False, quiet=False):
         # a cache from an older layout does not carry the fitted stage
         if cached is not None and not all(
                 k in cached for k in ("folds", "pooled_out_of_sample",
-                                      "chosen_params", "wrap_params")):
+                                      "chosen_params", "wrap_params",
+                                      "line_break")):
             if not quiet:
                 print("cache is from an older layout, refitting")
             cached = None
@@ -930,35 +1265,36 @@ def fit(cache_path, corpus_path, refit=False, quiet=False):
         closers = set(cached["closers"])
         soft = cached["soft"]
         mu = cached["max_units"]
-        R, params, openers, closers, soft, mu = analyse(paragraphs, fitted=cached,
-                                                        quiet=quiet)
+        R, params, openers, closers, soft, mu, lb = analyse(
+            paragraphs, fitted=cached, quiet=quiet)
         if not quiet:
             print("using cached parameters (pass --refit to redo the search)")
-        return R, params, openers, closers, soft, mu
+        return R, params, openers, closers, soft, mu, lb
 
-    R, params, openers, closers, soft, mu = analyse(paragraphs, quiet=quiet)
+    R, params, openers, closers, soft, mu, lb = analyse(paragraphs, quiet=quiet)
     blob = {"params": params, "openers": "".join(sorted(openers)),
             "closers": "".join(sorted(closers)),
             "soft": soft, "max_units": mu,
             "folds": R["folds"],
             "pooled_out_of_sample": R["pooled_out_of_sample"],
             "chosen_params": R["chosen_params"],
-            "wrap_params": R["wrap_params"]}
+            "wrap_params": R["wrap_params"],
+            "line_break": R["line_break"]}
     for target in (Path(cache_path), cache_dir() / "nmud_style_params.json"):
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
-            with open(target, "w", encoding="utf-8") as f:
+            with open(target, "w", encoding="utf-8", newline="\n") as f:
                 json.dump(blob, f, ensure_ascii=False, indent=1)
             if not quiet:
                 print("cached parameters ->", target)
             break
         except OSError:
             continue
-    return R, params, openers, closers, soft, mu
+    return R, params, openers, closers, soft, mu, lb
 
 
 def style_text(raw, params, openers, closers, soft=18, mu=3,
-               drop_punct=True):
+               drop_punct=True, lb=None):
     """Plain text in, nmud text out.
 
     Blank lines separate the paragraphs, and a line break inside a
@@ -982,7 +1318,7 @@ def style_text(raw, params, openers, closers, soft=18, mu=3,
         body, _, _ = render(" ".join(l.rstrip() for l in p),
                             params, openers, closers,
                             soft=soft, max_units=mu,
-                            drop_punct=drop_punct)
+                            drop_punct=drop_punct, lb=lb)
         out_blocks.append(body)
     return "\n\n".join(out_blocks) + "\n"
 
@@ -1011,8 +1347,9 @@ def main(argv=None):
         print("corpus:", corpus)
         print("cache :", cache)
 
-    R, params, openers, closers, soft, mu = fit(cache, corpus, refit=args.refit,
-                                               quiet=args.quiet)
+    R, params, openers, closers, soft, mu, lb = fit(cache, corpus,
+                                                   refit=args.refit,
+                                                   quiet=args.quiet)
 
     if args.report is not None:
         if args.report == "AUTO":
@@ -1036,7 +1373,7 @@ def main(argv=None):
             return False
 
         _find_bad(R)
-        with open(report_path, "w", encoding="utf-8") as f:
+        with open(report_path, "w", encoding="utf-8", newline="\n") as f:
             json.dump(R, f, ensure_ascii=False, indent=1)
         print("wrote", report_path)
 
@@ -1047,7 +1384,7 @@ def main(argv=None):
         print("=" * 68)
         for d in DEMO:
             body, units, lines = render(d, params, openers, closers,
-                                        soft=soft, max_units=mu)
+                                        soft=soft, max_units=mu, lb=lb)
             print("-" * 68)
             print("plain  :", d)
             print("units  :", " | ".join(unit_text(u) for u in units))
@@ -1066,7 +1403,7 @@ def main(argv=None):
     if args.inp:
         raw = open(args.inp, "rb").read().decode("utf-8")
         styled = style_text(raw, params, openers, closers, soft=soft, mu=mu,
-                            drop_punct=not args.keep_punct)
+                            drop_punct=not args.keep_punct, lb=lb)
         if args.outp:
             with open(args.outp, "wb") as f:
                 f.write(styled.encode("utf-8"))

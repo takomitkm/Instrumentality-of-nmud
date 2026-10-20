@@ -41,8 +41,8 @@ nmud的日记中写到
 **这套是默认路线**：解释器、jieba、语料、拟合参数全在校机，这台机器什么都不用装。
 
 ```powershell
-git clone https://github.com/takomitkm/Instrumentality-of-nmud.git
-cd Instrumentality-of-nmud
+git clone https://github.com/takomitkm/Instrumentality-of-nmud-AIGC.git
+cd Instrumentality-of-nmud-AIGC
 
 .\setup-guest.bat          # 把校机装好：同步包 → 校机侧检测与安装 → 自检
 .\nmud-style.bat           # 一键：剪切板进 → nmud 语出 → 写回剪切板
@@ -65,8 +65,8 @@ result  : ready, the guest can restyle text
 ### 2. 任何平台：在本机跑
 
 ```bash
-git clone https://github.com/takomitkm/Instrumentality-of-nmud.git
-cd Instrumentality-of-nmud
+git clone https://github.com/takomitkm/Instrumentality-of-nmud-AIGC.git
+cd Instrumentality-of-nmud-AIGC
 
 python setup_env.py       # 检测 + 装进仓库自己的 .venv + 自检（Windows/mac/Linux 都行）
 ./nmud-style.sh           # 一键（mac/Linux）；Windows 用 .\nmud-style.bat
@@ -130,7 +130,7 @@ nmud-style --demo          # 内置例子
 
 ## 三、在线版（GitHub Pages）
 
-**<https://takomitkm.github.io/Instrumentality-of-nmud/>**
+**<https://takomitkm.github.io/Instrumentality-of-nmud-AIGC/>**
 
 输入一段中文，按「生成」，右边出 nmud 语。空行分段。
 

@@ -40,8 +40,8 @@ analysis = [
 nmud-style = "nmud_style.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/takomitkm/Instrumentality-of-nmud"
-Repository = "https://github.com/takomitkm/Instrumentality-of-nmud"
+Homepage = "https://github.com/takomitkm/Instrumentality-of-nmud-AIGC"
+Repository = "https://github.com/takomitkm/Instrumentality-of-nmud-AIGC"
 
 [tool.setuptools]
 packages = ["nmud_style"]

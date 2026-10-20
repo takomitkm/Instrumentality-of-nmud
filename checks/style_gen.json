@@ -1,0 +1,439 @@
+{
+ "n_paragraphs": 64,
+ "folds": {
+  "A": {
+   "n_openers": 16,
+   "n_closers": 15,
+   "params": {
+    "w_open": 3.0,
+    "w_close": 1.0,
+    "w_posstart": 1.0,
+    "w_posend": 0.0,
+    "w_de": 1.0,
+    "min_len": 2,
+    "max_len": 4
+   },
+   "in_sample": {
+    "precision": 0.8058,
+    "recall": 0.8649,
+    "f1": 0.8343,
+    "tp": 224,
+    "predicted": 278,
+    "truth": 259
+   },
+   "test": {
+    "precision": 0.8219,
+    "recall": 0.8423,
+    "f1": 0.832,
+    "tp": 203,
+    "predicted": 247,
+    "truth": 241
+   }
+  },
+  "B": {
+   "n_openers": 12,
+   "n_closers": 13,
+   "params": {
+    "w_open": 2.0,
+    "w_close": 2.0,
+    "w_posstart": 1.0,
+    "w_posend": 0.0,
+    "w_de": 0.0,
+    "min_len": 2,
+    "max_len": 4
+   },
+   "in_sample": {
+    "precision": 0.8413,
+    "recall": 0.8797,
+    "f1": 0.8601,
+    "tp": 212,
+    "predicted": 252,
+    "truth": 241
+   },
+   "test": {
+    "precision": 0.7572,
+    "recall": 0.8069,
+    "f1": 0.7813,
+    "tp": 209,
+    "predicted": 276,
+    "truth": 259
+   }
+  }
+ },
+ "pooled_out_of_sample": {
+  "precision": 0.7878,
+  "recall": 0.824,
+  "f1": 0.8055,
+  "tp": 412,
+  "predicted": 523,
+  "truth": 500
+ },
+ "chosen_params": {
+  "from_fold": "A",
+  "params": {
+   "w_open": 3.0,
+   "w_close": 1.0,
+   "w_posstart": 1.0,
+   "w_posend": 0.0,
+   "w_de": 1.0,
+   "min_len": 2,
+   "max_len": 4
+  },
+  "why": "weights come from the fold that won on held-out data; the character sets are re-derived on all paragraphs",
+  "n_openers": 25,
+  "n_closers": 25,
+  "openers": "n“也你兽又变只吃喝因太帖平很感所真知自蜂被还这那",
+  "closers": "d”…且中么了们候去呀呢啦在子害家对成次的觉解话里",
+  "top_openers": [
+   [
+    "只",
+    7,
+    7,
+    3.43
+   ],
+   [
+    "又",
+    5,
+    5,
+    3.43
+   ],
+   [
+    "变",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "“",
+    4,
+    4,
+    3.43
+   ],
+   [
+    "感",
+    4,
+    4,
+    3.43
+   ],
+   [
+    "真",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "兽",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "你",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "n",
+    38,
+    40,
+    3.26
+   ],
+   [
+    "也",
+    18,
+    19,
+    3.25
+   ],
+   [
+    "很",
+    10,
+    12,
+    2.86
+   ],
+   [
+    "蜂",
+    5,
+    6,
+    2.86
+   ],
+   [
+    "自",
+    4,
+    5,
+    2.74
+   ],
+   [
+    "被",
+    3,
+    4,
+    2.57
+   ]
+  ],
+  "top_closers": [
+   [
+    "d",
+    46,
+    46,
+    3.43
+   ],
+   [
+    "成",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "”",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "候",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "啦",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "次",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "呀",
+    5,
+    5,
+    3.43
+   ],
+   [
+    "在",
+    6,
+    7,
+    2.94
+   ],
+   [
+    "子",
+    6,
+    7,
+    2.94
+   ],
+   [
+    "家",
+    3,
+    4,
+    2.57
+   ],
+   [
+    "里",
+    3,
+    4,
+    2.57
+   ],
+   [
+    "话",
+    3,
+    4,
+    2.57
+   ],
+   [
+    "对",
+    3,
+    4,
+    2.57
+   ],
+   [
+    "了",
+    22,
+    30,
+    2.51
+   ]
+  ]
+ },
+ "round_trip_corpus": {
+  "n_author": 500,
+  "n_generated": 533,
+  "identical_units_set": 352,
+  "frac_identical": 0.704,
+  "author_only": [
+   [
+    "的时候",
+    4
+   ],
+   [
+    "nmud",
+    2
+   ],
+   [
+    "语",
+    2
+   ],
+   [
+    "shake",
+    2
+   ],
+   [
+    "kira",
+    2
+   ],
+   [
+    "之前隔壁",
+    1
+   ],
+   [
+    "被人给",
+    1
+   ],
+   [
+    "炸掉了",
+    1
+   ],
+   [
+    "还以为",
+    1
+   ],
+   [
+    "是他们",
+    1
+   ],
+   [
+    "为什么",
+    1
+   ],
+   [
+    "还说都是",
+    1
+   ]
+  ],
+  "generated_only": [
+   [
+    "时候",
+    4
+   ],
+   [
+    "一下",
+    4
+   ],
+   [
+    "之前",
+    2
+   ],
+   [
+    "什么",
+    2
+   ],
+   [
+    "就要",
+    2
+   ],
+   [
+    "不是",
+    2
+   ],
+   [
+    "那么",
+    2
+   ],
+   [
+    "蜂蜜",
+    2
+   ],
+   [
+    "于是",
+    2
+   ],
+   [
+    "但是",
+    2
+   ],
+   [
+    "这样",
+    2
+   ],
+   [
+    "知道",
+    2
+   ]
+  ],
+  "paragraph_1": {
+   "author": [
+    "之前隔壁",
+    "几万人的",
+    "浪人新闻",
+    "被人给",
+    "炸掉了"
+   ],
+   "generated": [
+    "之前",
+    "隔壁",
+    "几万人的",
+    "浪人新闻",
+    "被人",
+    "给炸掉了"
+   ]
+  }
+ },
+ "metrics_author": {
+  "n_units": 500,
+  "unit_len_mean": 3.116,
+  "unit_len_median": 3,
+  "unit_len_hist": {
+   "1": 8,
+   "2": 125,
+   "3": 183,
+   "4": 171,
+   "5": 11,
+   "6": 2
+  },
+  "frac_units_2_to_4": 0.958,
+  "frac_units_le_4": 0.974,
+  "n_lines": 199,
+  "width_median": 16,
+  "width_max": 29,
+  "width_min": 6,
+  "units_per_line_hist": {
+   "1": 4,
+   "2": 100,
+   "3": 87,
+   "4": 5,
+   "5": 3
+  }
+ },
+ "metrics_generated": {
+  "n_units": 533,
+  "unit_len_mean": 2.923,
+  "unit_len_median": 3,
+  "unit_len_hist": {
+   "1": 1,
+   "2": 206,
+   "3": 174,
+   "4": 148,
+   "5": 1,
+   "8": 2,
+   "10": 1
+  },
+  "frac_units_2_to_4": 0.9906,
+  "frac_units_le_4": 0.9925,
+  "n_lines": 250,
+  "width_median": 13,
+  "width_max": 17,
+  "width_min": 3,
+  "units_per_line_hist": {
+   "1": 25,
+   "2": 167,
+   "3": 58
+  }
+ },
+ "generated_boundary_alignment": {
+  "n_cuts": 469,
+  "on_jieba_boundary": 1.0,
+  "author_on_the_same_test": 0.9767
+ }
+}

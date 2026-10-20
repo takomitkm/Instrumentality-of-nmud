@@ -1,0 +1,282 @@
+{
+ "params": {
+  "w_open": 2.0,
+  "w_close": 1.0,
+  "w_posstart": 0.0,
+  "w_posend": 0.0,
+  "w_de_next": 0.0,
+  "w_de_prev": 0.5,
+  "min_len": 2,
+  "max_len": 4
+ },
+ "openers": "n“也你兽又变只吃喝因太帖平很感所真知自蜂被还这那",
+ "closers": "d”…且中么了们候去呀呢啦在子害家对成次的觉解话里",
+ "soft": 18,
+ "max_units": 4,
+ "folds": {
+  "A": {
+   "n_openers": 16,
+   "n_closers": 15,
+   "params": {
+    "w_open": 2.0,
+    "w_close": 1.0,
+    "w_posstart": 0.0,
+    "w_posend": 0.0,
+    "w_de_next": 0.0,
+    "w_de_prev": 0.5,
+    "min_len": 2,
+    "max_len": 4
+   },
+   "in_sample": {
+    "precision": 0.8429,
+    "recall": 0.8494,
+    "f1": 0.8461,
+    "tp": 220,
+    "predicted": 261,
+    "truth": 259
+   },
+   "test": {
+    "precision": 0.8133,
+    "recall": 0.8133,
+    "f1": 0.8133,
+    "tp": 196,
+    "predicted": 241,
+    "truth": 241
+   }
+  },
+  "B": {
+   "n_openers": 12,
+   "n_closers": 13,
+   "params": {
+    "w_open": 1.0,
+    "w_close": 1.0,
+    "w_posstart": 1.0,
+    "w_posend": 0.0,
+    "w_de_next": -0.5,
+    "w_de_prev": -1.0,
+    "min_len": 2,
+    "max_len": 4
+   },
+   "in_sample": {
+    "precision": 0.8471,
+    "recall": 0.8963,
+    "f1": 0.871,
+    "tp": 216,
+    "predicted": 255,
+    "truth": 241
+   },
+   "test": {
+    "precision": 0.7868,
+    "recall": 0.8263,
+    "f1": 0.8061,
+    "tp": 214,
+    "predicted": 272,
+    "truth": 259
+   }
+  }
+ },
+ "pooled_out_of_sample": {
+  "precision": 0.7992,
+  "recall": 0.82,
+  "f1": 0.8095,
+  "tp": 410,
+  "predicted": 513,
+  "truth": 500
+ },
+ "chosen_params": {
+  "from_fold": "A",
+  "params": {
+   "w_open": 2.0,
+   "w_close": 1.0,
+   "w_posstart": 0.0,
+   "w_posend": 0.0,
+   "w_de_next": 0.0,
+   "w_de_prev": 0.5,
+   "min_len": 2,
+   "max_len": 4
+  },
+  "why": "weights come from the fold that won on held-out data; the character sets are re-derived on all paragraphs",
+  "n_openers": 25,
+  "n_closers": 25,
+  "openers": "n“也你兽又变只吃喝因太帖平很感所真知自蜂被还这那",
+  "closers": "d”…且中么了们候去呀呢啦在子害家对成次的觉解话里",
+  "top_openers": [
+   [
+    "只",
+    7,
+    7,
+    3.43
+   ],
+   [
+    "又",
+    5,
+    5,
+    3.43
+   ],
+   [
+    "变",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "“",
+    4,
+    4,
+    3.43
+   ],
+   [
+    "感",
+    4,
+    4,
+    3.43
+   ],
+   [
+    "真",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "兽",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "你",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "n",
+    38,
+    40,
+    3.26
+   ],
+   [
+    "也",
+    18,
+    19,
+    3.25
+   ],
+   [
+    "很",
+    10,
+    12,
+    2.86
+   ],
+   [
+    "蜂",
+    5,
+    6,
+    2.86
+   ],
+   [
+    "自",
+    4,
+    5,
+    2.74
+   ],
+   [
+    "被",
+    3,
+    4,
+    2.57
+   ]
+  ],
+  "top_closers": [
+   [
+    "d",
+    46,
+    46,
+    3.43
+   ],
+   [
+    "成",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "”",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "候",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "啦",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "次",
+    3,
+    3,
+    3.43
+   ],
+   [
+    "呀",
+    5,
+    5,
+    3.43
+   ],
+   [
+    "在",
+    6,
+    7,
+    2.94
+   ],
+   [
+    "子",
+    6,
+    7,
+    2.94
+   ],
+   [
+    "家",
+    3,
+    4,
+    2.57
+   ],
+   [
+    "里",
+    3,
+    4,
+    2.57
+   ],
+   [
+    "话",
+    3,
+    4,
+    2.57
+   ],
+   [
+    "对",
+    3,
+    4,
+    2.57
+   ],
+   [
+    "了",
+    22,
+    30,
+    2.51
+   ]
+  ]
+ },
+ "wrap_params": {
+  "soft": 18,
+  "max_units": 4,
+  "cost_vs_author": 0.3489,
+  "how": "grid searched against the author's own units-per-line and width profile"
+ }
+}

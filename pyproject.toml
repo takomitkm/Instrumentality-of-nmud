@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nmud-style"
+version = "1.0.0"
+description = "Restyle Chinese text into the nmud forum style: short word units, one space between them, two to four units per line."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "takomitkm" }]
+keywords = ["chinese", "typography", "style", "segmentation", "nlp"]
+classifiers = [
+    "Environment :: Console",
+    "Natural Language :: Chinese (Simplified)",
+    "Programming Language :: Python :: 3",
+    "Topic :: Text Processing :: Linguistic",
+]
+dependencies = [
+    "jieba>=0.42",
+    "pyperclip>=1.8",
+]
+
+[project.optional-dependencies]
+# Only needed to redo the corpus analysis in checks/, not to restyle text.
+analysis = [
+    "thulac>=0.2",
+    "pkuseg>=0.1",
+    "hanlp",
+    "numpy",
+    "scipy",
+    "pandas",
+    "pypinyin",
+    "cn2an",
+    "zhon",
+    "opencc-python-reimplemented",
+]
+
+[project.scripts]
+nmud-style = "nmud_style.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/takomitkm/nmud-style"
+
+[tool.setuptools]
+packages = ["nmud_style"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+nmud_style = ["data/*"]

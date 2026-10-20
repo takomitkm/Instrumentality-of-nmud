@@ -1,0 +1,17 @@
+# keep the line endings and the encoding straight on every platform
+* text=auto
+
+*.md   text eol=lf encoding=utf-8
+*.py   text eol=lf encoding=utf-8
+*.json text eol=lf encoding=utf-8
+*.txt  text eol=lf encoding=utf-8
+*.toml text eol=lf encoding=utf-8
+*.sh   text eol=lf encoding=utf-8
+
+# cmd.exe is not happy with a batch file that has only LF line endings
+*.bat  text eol=crlf
+
+# the corpus is evidence: it is kept byte for byte as the author saved it,
+# so the byte count and the CRLF line endings in the report stay true
+nmud_style/data/nmud.txt text eol=crlf
+guest/tools/nmud.txt        text eol=crlf

@@ -1,0 +1,4 @@
+# The generator needs these two. Everything else is optional and only
+# used by the corpus analysis in checks/.
+jieba>=0.42
+pyperclip>=1.8

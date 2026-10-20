@@ -1,0 +1,11 @@
+# the local environment the setup creates
+.venv/
+__pycache__/
+*.pyc
+
+# a fit that writes its parameters to the repository root
+/nmud_style_params.json
+
+# scratch
+*.log
+*.tmp

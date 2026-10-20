@@ -1,7 +1,7 @@
 # nmud 语料规律分析报告
 
 对象：语料 `nmud_style/data/nmud.txt`（单篇中文网络帖子，5087 字节，按原始字节保存）
-分析环境：校机 `<hostname>`（`<username>`），工具链装在校机项目根（`tools\`／`out\`／`tmp\`）
+分析环境：校机（主机名与用户名见 `SOP-nmud-style.md`），工具链装在校机项目根（`tools\`／`out\`／`tmp\`）
 所有数字来自 `checks\nmud_rules.json` 与 `checks\generative_model.json`（拉回本仓库的结果），可复跑
 
 ---

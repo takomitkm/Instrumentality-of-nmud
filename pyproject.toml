@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "instrumentality-of-nmud"
 version = "1.0.0"
-description = "nmud language style generator: restyle Chinese text into the nmud forum style - short word units, one space between them, two to four units per line."
+description = "nmud language style generator: restyle Chinese text into the style of nmud - short word units, one space between them, two to four units per line."
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "takomitkm" }]

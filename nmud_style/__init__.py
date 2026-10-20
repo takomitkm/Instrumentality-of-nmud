@@ -1,4 +1,4 @@
-"""nmud-style: restyle Chinese text into the nmud forum style.
+"""nmud-style: restyle Chinese text into the style of nmud.
 
 The author of the corpus writes in a very particular way: words are
 grouped into short units, the units are separated by a single space, and

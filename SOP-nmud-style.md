@@ -1,6 +1,6 @@
 # SOP：nmud 语料风格分析与排版生成器
 
-> 一次可复现的完整流程。目标机是**校机**（`<hostname>`，用户 `<username>`），本机只做编辑和取回。
+> 一次可复现的完整流程。目标机是**校机**（主机名与用户名见你自己的 SSH 配置与 `guest\remote.cfg`），本机只做编辑和取回。
 > 全部产物：校机项目根下的 `tools\`（脚本与包）、`out\`（结果）、`tmp\`（暂存），以及本仓库（源码、语料、拟合参数）。
 > 本文里的路径一律是**相对路径**：校机项目根由 `guest\remote.cfg` 的 `remote_root` 决定，仓库内的文件按 `guest\`、`checks\` 这样的目录写。
 > 结论报告见 `nmud_corpus_report.md`；本文只讲**怎么跑起来**。
@@ -21,15 +21,15 @@
 
 | 项 | 值 |
 | --- | --- |
-| SSH 别名 | `school-guest`（`ProxyCommand` 跳板链）、`school-guest-lan`（直连 `<校机的局域网地址>`） |
-| 校机 | `<hostname>`，默认 shell `cmd.exe` |
+| SSH 别名 | `school-guest`（`ProxyCommand` 跳板链）、`school-guest-lan`（直连校机的局域网地址） |
+| 校机 | 主机名见你自己的 SSH 配置，默认 shell `cmd.exe` |
 | 虚拟环境 | 校机项目根下的 `.venv`（Python 3.12.15）——**解释器在校机里，不在本机** |
 | 关键包 | jieba 0.42.1(+posseg)、thulac、pkuseg、hanlp 2.1.5、torch 2.14.1+cpu、spacy、stanza |
 | 目录布局 | `tools\` 脚本与包／`out\` 结果／`logs\` 日志／`tmp\` 暂存 |
 | 生成器包 | `tools\nmud_style\`（本仓库 `nmud_style\` 同步过去的，含 `data\` 里的语料与拟合参数） |
 | 语料 | `tools\nmud.txt` 与 `tools\nmud_style\data\nmud.txt`（MD5 `65bb708768ee4d8b5b6f10e0bcd52180`，5087 字节，**按原始字节存，CRLF**） |
 
-本机（Windows 工作站）上**没有** jieba，**也不装**：校机内网连不上 GitHub，`spacy download` 与 `stanza.download` 都会失败，但**不影响本流程**，jieba 已经够用。
+本机（Windows 工作站）上**没有** jieba，**也不装**：解释器在校机里。校机能直连 GitHub（装包、拉仓库都走这条路）；`spacy download`／`stanza.download` 这类额外模型下载另行确认，**不影响本流程**，jieba 已经够用。
 
 ## 2. 助手脚本（本仓库 `guest\`）
 

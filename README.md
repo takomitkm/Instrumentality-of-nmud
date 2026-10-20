@@ -122,10 +122,47 @@ nmud-style --demo          # 内置例子
 | 复算脚本 | 报告结论的复算工具（词性、细空格、嗓音层、完整性校验）与分析产出的 json | [`checks/`](checks/) |
 | 校机那套 | 同步包、跑包、拉结果、回归、剪切板流程的 SSH 脚本 | [`guest/`](guest/) |
 | 打包 | `pip install .` 得到 `nmud-style` 命令 | [`pyproject.toml`](pyproject.toml) · [`requirements.txt`](requirements.txt) |
+| 在线版 | 一个静态页面：两个文本框（输入中文 / 生成 nmud 语）加一个「生成」按钮，浏览器里跑，不连服务器 | [`index.html`](index.html) · [`web/`](web/) |
 
 ---
 
-## 三、效果有多准
+## 三、在线版（GitHub Pages）
+
+**<https://takomitkm.github.io/Instrumentality-of-nmud/>**
+
+输入一段中文，按「生成」，右边出 nmud 语。空行分段。
+
+```bash
+# 本地看：仓库根目录起个静态服务器（页面要 fetch 参数文件，file:// 打不开）
+python -m http.server 8000
+# → http://localhost:8000/
+```
+
+它不是另一套规则，是同一套规则搬进了浏览器：
+
+| 部件 | 网页版 | 命令行版 |
+| --- | --- | --- |
+| 标点规则、切分动态规划、折行 | [`web/style.js`](web/style.js)（`engine.py` 渲染部分的移植） | [`nmud_style/engine.py`](nmud_style/engine.py) |
+| 拟合好的参数（权重、起收字、折行宽） | [`nmud_style/data/nmud_style_params.json`](nmud_style/data/nmud_style_params.json)（同一个文件） | 同左 |
+| 分词 | [`web/dict.txt.gz`](web/dict.txt.gz)：jieba 的 `dict.txt` 去掉词性列，1.7 MB | jieba（本机装的） |
+
+两处要说清楚：
+
+- **分词没有 HMM**。网页版走的是 jieba 的 DAG 切分（词表 + 路由最大化），没有它那一层新词发现（`finalseg`）。生僻词、切错边界的词，网页版和命令行版会有出入。
+- **词性读不到**。模型里两个词性权重都是 0（拟合出来的结论），所以词性从来不参与决策；真要重拟一个带词性权重的模型，得回命令行版。
+
+同一把尺子（同一批段落、同一套参数、词级 F1 对作者的切分）量出来：
+
+| 实现 | P | R | F1 |
+| --- | --- | --- | --- |
+| Python + jieba（`checks/eval_shipped.py`） | 0.8431 | 0.8600 | **0.8515** |
+| 浏览器版（`web/check.js`） | 0.8031 | 0.8400 | **0.8211** |
+
+差 0.03 F1，就是 HMM 那层的代价。
+
+---
+
+## 四、效果有多准
 
 | 指标 | 值 |
 | --- | --- |
@@ -138,7 +175,7 @@ nmud-style --demo          # 内置例子
 
 ---
 
-## 四、注意
+## 五、注意
 
 - 这些比率描述的是**nmud**的写法（单个 5 KB 文档）。纯一人语料。因为nmud同好会的解散，nmud文集散佚，鄙人简略复制了十段就拿来做这个repo了，风味不足还请见谅
 - jieba 不认识互联网词汇（`nmud`、`yyds` 之类），会切错；切分靠词边界对齐，词切错边界就跟着错。

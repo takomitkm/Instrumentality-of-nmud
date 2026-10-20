@@ -7,6 +7,11 @@
 *.txt  text eol=lf encoding=utf-8
 *.toml text eol=lf encoding=utf-8
 *.sh   text eol=lf encoding=utf-8
+*.js   text eol=lf encoding=utf-8
+*.html text eol=lf encoding=utf-8
+
+# the dictionary the browser build downloads: already compressed
+*.gz   binary
 
 # cmd.exe is not happy with a batch file that has only LF line endings
 *.bat  text eol=crlf

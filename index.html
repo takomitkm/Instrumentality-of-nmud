@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nmud 语言风格生成器 · 在线版</title>
+<meta name="description" content="把中文文本排成 nmud 论坛那套写法：词被切成短单元，单元之间一个空格，一行放两到四个单元。">
+<style>
+  :root {
+    --ink: #1c1c1e;
+    --dim: #6b6b70;
+    --line: #d8d8dc;
+    --bg: #fbfbfc;
+    --panel: #ffffff;
+    --accent: #2f6f4f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2rem 1.25rem 4rem;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.7 "Noto Sans CJK SC", "Source Han Sans SC", "PingFang SC",
+          "Microsoft YaHei", system-ui, sans-serif;
+  }
+  main { max-width: 62rem; margin: 0 auto; }
+  h1 { font-size: 1.55rem; margin: 0 0 .35rem; letter-spacing: .01em; }
+  h2 { font-size: 1rem; margin: 0 0 .5rem; color: var(--dim); font-weight: 600; }
+  p.lead { margin: 0 0 1.6rem; color: var(--dim); }
+  .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 760px) { .panes { grid-template-columns: 1fr; } }
+  .pane {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: .9rem 1rem 1rem;
+  }
+  textarea {
+    width: 100%;
+    height: 19rem;
+    resize: vertical;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: inherit;
+    font: 16px/1.9 "Noto Sans Mono CJK SC", "Sarasa Mono SC", Consolas,
+          "Microsoft YaHei", monospace;
+    white-space: pre-wrap;
+  }
+  #out { color: var(--accent); }
+  .bar { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin: 1rem 0 1.4rem; }
+  button {
+    font: inherit;
+    padding: .45rem 1.1rem;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover { color: #fff; opacity: .9; }
+  button:disabled { opacity: .5; cursor: default; }
+  #status { color: var(--dim); font-size: .92rem; }
+  footer { margin-top: 2.5rem; padding-top: 1.2rem; border-top: 1px solid var(--line);
+           color: var(--dim); font-size: .88rem; }
+  footer a { color: var(--accent); }
+  code { background: #eef0f2; padding: .1rem .35rem; border-radius: 4px;
+         font-size: .9em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>nmud 语言风格生成器</h1>
+  <p class="lead">
+    永远怀念 <a href="https://x.com/realnmudml">@realnmudml</a> ·
+    <a href="https://t.me/nmudmlclub">@nmudmlclub</a> ·
+    对 nmud 的拙劣模仿
+  </p>
+
+  <div class="panes">
+    <section class="pane">
+      <h2>输入中文</h2>
+      <textarea id="in" spellcheck="false"
+        placeholder="把要排版的中文贴进来，然后按“生成”。空行分段。"></textarea>
+    </section>
+    <section class="pane">
+      <h2>生成 nmud 语</h2>
+      <textarea id="out" spellcheck="false" readonly
+        placeholder="结果会出现在这里。"></textarea>
+    </section>
+  </div>
+
+  <div class="bar">
+    <button id="go" class="primary" disabled>生成</button>
+    <button id="sample">填个例子</button>
+    <button id="copy">复制结果</button>
+    <span id="status">正在准备分词词典…</span>
+  </div>
+
+  <footer>
+    <p>
+      这是在线版，用的是仓库里同一套规则：<code>nmud_style/engine.py</code> 的渲染部分
+      （标点规则、动态规划切分、折行）加上拟合好的参数
+      <code>nmud_style/data/nmud_style_params.json</code>。
+      分词在浏览器里跑，词典就是 jieba 的 <code>dict.txt</code>（去掉了词性列），
+      走的是 jieba 的 DAG 切分，不含它的 HMM 新词发现——所以词界和命令行版绝大多数一致，
+      极少数生僻词会切得不一样。
+    </p>
+    <p>
+      语料与报告是作者作品，转贴请注明出处。
+      源码：<a href="https://github.com/takomitkm/Instrumentality-of-nmud">github.com/takomitkm/Instrumentality-of-nmud</a>
+    </p>
+  </footer>
+</main>
+
+<script src="web/seg.js"></script>
+<script src="web/style.js"></script>
+<script src="web/app.js"></script>
+</body>
+</html>

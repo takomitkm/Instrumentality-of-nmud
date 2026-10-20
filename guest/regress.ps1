@@ -18,24 +18,33 @@ $tmp = Join-NlpRemote -Root $root -Parts @("tmp")
 $out = Join-NlpRemote -Root $root -Parts @("out")
 
 $cases = @(
-    @{ script = "nmud_style.py";       name = "nmud_style.json";        args = @("--report") },
-    @{ script = "nmud_rules.py";       name = "nmud_rules.json";        args = @("--out") },
-    @{ script = "generative_model.py"; name = "generative_model.json";  args = @("--out") },
-    @{ script = "integrity.py";        name = "integrity_report.json";  args = @("--out") },
-    @{ script = "style_gen.py";        name = "style_gen.json";         args = @("--out") }
+    # the generator is a package now: it runs with "python -m nmud_style"
+    @{ pkg = $true;  name = "nmud_style.json";       args = @("--report") },
+    @{ pkg = $false; script = "nmud_rules.py";       name = "nmud_rules.json";        args = @("--out") },
+    @{ pkg = $false; script = "generative_model.py"; name = "generative_model.json";  args = @("--out") },
+    @{ pkg = $false; script = "integrity.py";        name = "integrity_report.json";  args = @("--out") },
+    @{ pkg = $false; script = "style_gen.py";        name = "style_gen.json";         args = @("--out") }
 )
 
 $runner = Get-NlpTool "runpy.ps1"
 $remoteHelper = Get-NlpTool "remote.ps1"
+# the analysis scripts live in checks\, the guest helpers live beside this file
+$checks = Join-Path (Split-Path $PSScriptRoot -Parent) "checks"
 
 foreach ($c in $cases) {
     $dest = Join-NlpRemote -Root $tmp -Parts @("regress_" + $c.name)
     $pyArgs = @($c.args[0], $dest)
-    Write-Output "########## $($c.script) ##########"
-    & $runner -Script (Join-Path $PSScriptRoot $c.script) -HostName $HostName `
-               -TimeoutSec $TimeoutSec -PyArgs $pyArgs 2>&1 |
-        Select-String -Pattern "=== exit code|Traceback|Error:" |
-        ForEach-Object { $_.Line }
+    Write-Output "########## $($c.name) ##########"
+    if ($c.pkg) {
+        & (Get-NlpTool "run_pkg.ps1") -HostName $HostName -TimeoutSec $TimeoutSec -PyArgs $pyArgs 2>&1 |
+            Select-String -Pattern "=== exit code|Traceback|Error:" |
+            ForEach-Object { $_.Line }
+    } else {
+        & $runner -Script (Join-Path $checks $c.script) -HostName $HostName `
+                   -TimeoutSec $TimeoutSec -PyArgs $pyArgs 2>&1 |
+            Select-String -Pattern "=== exit code|Traceback|Error:" |
+            ForEach-Object { $_.Line }
+    }
 }
 
 # compare on the guest: the files never come back to this machine

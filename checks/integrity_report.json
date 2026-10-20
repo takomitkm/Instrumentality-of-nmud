@@ -1,0 +1,51 @@
+{
+ "n_chars": 1564,
+ "n_space_cuts": 295,
+ "n_line_cuts": 199,
+ "segmenters": [
+  {
+   "segmenter": "jieba",
+   "n_tokens": 866,
+   "reproduces_input_exactly": true,
+   "joined_len": 1564,
+   "input_len": 1564,
+   "boundary_density": 0.5531,
+   "space_cuts_on_boundary": 0.9763,
+   "line_cuts_on_boundary": 0.9849
+  },
+  {
+   "segmenter": "thulac",
+   "n_tokens": 975,
+   "reproduces_input_exactly": true,
+   "joined_len": 1564,
+   "input_len": 1564,
+   "boundary_density": 0.6228,
+   "space_cuts_on_boundary": 0.9627,
+   "line_cuts_on_boundary": 0.9648
+  },
+  {
+   "segmenter": "pkuseg",
+   "n_tokens": 943,
+   "reproduces_input_exactly": true,
+   "joined_len": 1564,
+   "input_len": 1564,
+   "boundary_density": 0.6023,
+   "space_cuts_on_boundary": 0.9627,
+   "line_cuts_on_boundary": 0.9447
+  },
+  {
+   "segmenter": "hanlp",
+   "n_tokens": 896,
+   "reproduces_input_exactly": false,
+   "joined_len": 1561,
+   "input_len": 1564,
+   "first_divergence_at": 151,
+   "joined_around": "到一个帖子说nmud语马上就要变成中文互",
+   "input_around": "到一个帖子说nmud 语马上就要变成中文",
+   "chars_in_joined_not_in_input": 19
+  }
+ ],
+ "hanlp_n_flat": 896,
+ "hanlp_raw_type": "list",
+ "hanlp_raw_head": "['之前', '隔壁', '几万', '人', '的', '浪人', '新闻', '被', '人', '给', '炸掉', '了', '频道', '人数', '只', '剩', '十几', '人', 'nmud', '还', '以为', '是', '他们', '不想', '要', '这个', '频道', '虽然', 'nmud', '也是', '很', '讨厌', '这个', '频道', '造谣'"
+}
